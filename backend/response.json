@@ -1,0 +1,1 @@
+{"statusCode": 200, "headers": {"Content-Type": "application/json", "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "Content-Type", "Access-Control-Allow-Methods": "POST, OPTIONS"}, "body": "{\"reply\": \"Let's get back to your Women's Day script, shall we finalize it today?\", \"mood\": \"neutral\", \"status\": \"ok\"}"}

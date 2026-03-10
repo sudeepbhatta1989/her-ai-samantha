@@ -1,0 +1,96 @@
+workflows:
+  ios-development:
+    name: HER AI - iPhone Build
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+
+    environment:
+      flutter: 3.24.5
+      xcode: latest
+      cocoapods: default
+      vars:
+        BUNDLE_ID: "com.herai.samantha"
+        APP_NAME: "Samantha"
+        APPLE_ID: "sudeepbhatta1989@gmail.com"
+
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+
+    scripts:
+      - name: Flutter pub get
+        script: |
+          flutter pub get
+
+      - name: Verify critical files exist
+        script: |
+          echo "=== Checking critical files ==="
+          test -f ios/Runner/GoogleService-Info.plist && echo "✅ GoogleService-Info.plist found" || echo "❌ MISSING: GoogleService-Info.plist"
+          test -f fonts/Sora-Regular.ttf && echo "✅ Sora-Regular.ttf found" || echo "❌ MISSING: fonts/Sora-Regular.ttf"
+          test -f fonts/Sora-Bold.ttf    && echo "✅ Sora-Bold.ttf found"    || echo "❌ MISSING: fonts/Sora-Bold.ttf"
+          ls -la fonts/ 2>/dev/null || echo "❌ fonts/ folder missing"
+          echo "=== pubspec flutter section ==="
+          grep -A 20 "^flutter:" pubspec.yaml
+
+      - name: Set bundle ID
+        script: |
+          cd ios
+          /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier $BUNDLE_ID" Runner/Info.plist
+
+      - name: Install app icons
+        script: |
+          ICON_DIR="ios/Runner/Assets.xcassets/AppIcon.appiconset"
+          mkdir -p "$ICON_DIR"
+          cp icons/Icon-20.png   "$ICON_DIR/"
+          cp icons/Icon-29.png   "$ICON_DIR/"
+          cp icons/Icon-40.png   "$ICON_DIR/"
+          cp icons/Icon-58.png   "$ICON_DIR/"
+          cp icons/Icon-60.png   "$ICON_DIR/"
+          cp icons/Icon-80.png   "$ICON_DIR/"
+          cp icons/Icon-87.png   "$ICON_DIR/"
+          cp icons/Icon-120.png  "$ICON_DIR/"
+          cp icons/Icon-180.png  "$ICON_DIR/"
+          cp icons/Icon-1024.png "$ICON_DIR/"
+          cp icons/Contents.json "$ICON_DIR/"
+          echo "Icons installed"
+
+      - name: Install pods
+        script: |
+          cd ios && pod install
+
+      - name: Build iOS (no code signing)
+        script: |
+          flutter build ios --release --no-codesign
+
+      - name: Create unsigned IPA
+        script: |
+          cd ios
+          xcodebuild -workspace Runner.xcworkspace \
+            -scheme Runner \
+            -sdk iphoneos \
+            -configuration Release \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            CONFIGURATION_BUILD_DIR=$CM_BUILD_DIR/output \
+            clean build
+          cd $CM_BUILD_DIR/output
+          mkdir -p Payload
+          cp -r Runner.app Payload/
+          zip -r Samantha.ipa Payload/
+
+    artifacts:
+      - $CM_BUILD_DIR/output/Samantha.ipa
+      - build/ios/iphoneos/Runner.app
+      - flutter_drive.log
+
+    publishing:
+      email:
+        recipients:
+          - sudeepbhatta1989@gmail.com
+        notify:
+          success: true
+          failure: true

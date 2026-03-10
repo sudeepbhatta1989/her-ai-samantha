@@ -1,0 +1,56 @@
+name: app
+description: "HER AI - Samantha Personal Life Assistant"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.5.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Firebase
+  firebase_core: ^3.0.0
+  cloud_firestore: ^5.0.0
+  firebase_auth: ^5.0.0
+  firebase_messaging: ^15.0.0
+
+  # Voice
+  speech_to_text: ^7.0.0
+  flutter_tts: ^4.0.0
+
+  # Networking
+  http: ^1.2.0
+
+  # UI — google_fonts removed, using bundled font instead
+  shared_preferences: ^2.3.0
+  intl: ^0.19.0
+
+  # Audio playback for Google TTS
+  just_audio: ^0.9.40
+  path_provider: ^2.1.0
+
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+
+  fonts:
+    - family: Sora
+      fonts:
+        - asset: fonts/Sora-Regular.ttf
+          weight: 400
+        - asset: fonts/Sora-Light.ttf
+          weight: 300
+        - asset: fonts/Sora-Medium.ttf
+          weight: 500
+        - asset: fonts/Sora-SemiBold.ttf
+          weight: 600
+        - asset: fonts/Sora-Bold.ttf
+          weight: 700

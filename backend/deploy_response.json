@@ -1,0 +1,47 @@
+{
+    "FunctionName": "her-ai-brain",
+    "FunctionArn": "arn:aws:lambda:ap-south-1:966899696144:function:her-ai-brain",
+    "Runtime": "python3.11",
+    "Role": "arn:aws:iam::966899696144:role/her-ai-lambda-role",
+    "Handler": "handler.lambda_handler",
+    "CodeSize": 35454168,
+    "Description": "",
+    "Timeout": 30,
+    "MemorySize": 256,
+    "LastModified": "2026-03-08T19:02:04.000+0000",
+    "CodeSha256": "gX0gfCDCdWPk/ShBEjaHIlCmpEqc11JG6vh/5j5DWPQ=",
+    "Version": "$LATEST",
+    "Environment": {
+        "Variables": {
+            "SERPER_API_KEY": "860998639fe7788f0392b2f169e663b67eb92421",
+            "GROQ_API_KEY": "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",
+            "FIREBASE_SERVICE_ACCOUNT": "{   \"type\": \"service_account\",   \"project_id\": \"her-ai-samantha\",   \"private_key_id\": \"eaf4fde496b62b99a295b5352d1b8b19dc8cf08b\",   \"private_key\": \"-----BEGIN PRIVATE KEY-----\\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDRcKl6LBizsvij\\nOo8A+ZCWk1Hu+pq7MfI68sWpQ9MqS055nX3xnsujgL1p2sNhRMZjlcSkEALUnZMG\\nqDe53UKBo2NXSmJ0tBGwAzsbxvhQwdehFvyt/uddijbZZzISXQ2vyv09RuQPq2IO\\n6zHK42phEUJyS6EQPPWledFFjM8UJe/7EXqH6GJlndpAuL24XSTj299UMfL2qk3R\\n5xn4ORVvAIRUsIP4Ar0v0n/HoShaTobs4It0Fcd2Z40fBAT/4FwBzoMfALS1bNhL\\nVfelnQbY+ZKQvBDISkkGAKnaTx4zCVg8YL2i7nFFaSC6AFtz38KX6ZzBAOLKxyEp\\nBmX/y0MXAgMBAAECggEAGIVhQk2RYtCsbaf4gDu34vlCmYE7xnj1jFNKMyQewA/r\\nEzAOQ9C8tNro0lDrmSLNO3GYgUDio/QC97+QLrGqDLWNdvXdix5eB8aJEBp+ji3z\\nygd/8/spKXl6LH/5i87bQF66wYbgQrllFKwSu1de6Bh2OB2EsPsCI6qchtESmaAV\\nDBJfE9YomKFp8dYfgRBWXqlchFPRbd2Y+Oq02eXF+OZsfmRy6lxc875tFJkv7JSi\\ny7DWNT5tFTdRhSqCCEi62DqyMcQbbgDmelFbfcyLvVdMX4YdK2dfH7HS79N25Vc/\\nJasUvaZvMnfGF8nPVFm7J1cQpHnYJp/8cAfiRLwsMQKBgQD741N3kSF1rA6LL+Dh\\nTI2BRg80R7q+YUJGLPwyFgNirbeuJZpF52DwyGZkzimuJpl+Ldv2FFfdsOHqJxhd\\n/2Dm662ZcRmlbCPD0qTd2fZNsBdDxA8iY4NCQPcFafkBbcJWXrN1e8lhlcJUFu5O\\nT5AGc3ouObYRMJ989ZARtPYNPwKBgQDU2/DAuuGZ7E5Dg3qQi7ZNNE/y0xGe9TFa\\nIrWqPZsHPi9mfP4+XyCrmpbzRVOxqQddAxearRdZuAeY4F1h+rNVbPTTPlL8Ib0J\\nSY3oi5//y2XFPynjf/Nqfd/iG0/qf3nFR7uMQd0ALN3dO78J1V7ulf+HxExdrk1O\\nls8Ikb/cKQKBgQCNSP1QW7+A2Xlu6PQia2YT1NBCatl8X+Fkq2bqUR6lAvu8Wqsl\\n+pqNdFq6wEjwvgXqmJ6AcPi4CLcvN66bStt3q0o8fwv7laSZ+lUve0qEWPkzsY0r\\npNXDG91y0/YvrvkKqSPQChby/aV6tUIF+uq2M5+cvhI5oiRTWwnsZKx+0QKBgEuP\\nR4ciz7K0D5Qnt/pXnf8J8tdf1YF3yG0WpSYpeD659FmNRTMe0ZoY5jy0/2Cxf8uk\\nrVxa1U8j5I6AFqYROFe6ta3HEe4ui8wgMB+8cK98pEPAiD4ZzW6gADljOJslZTSC\\nojDHsIu/YYKHEumKtIg89tha9kDK/uZG4ndIRbMBAoGAWku/SWztrb2/uEjWf5zS\\noWOhZepEcz8Zh9rvbXqvaWbyPDwi5hFT7pOroCduzLr4W26HxOYpGrsMLdywlXAe\\nZKpZ/ACYhlgTuvUnmqeOn6IxgRbc8kDb4AuSbIwIhuKhVuEL5e0nlOAu3EMSz/HI\\nlpmeTq/J8yFt1aW+LFbCvzc=\\n-----END PRIVATE KEY-----\\n\",   \"client_email\": \"firebase-adminsdk-fbsvc@her-ai-samantha.iam.gserviceaccount.com\",   \"client_id\": \"117886926977595647574\",   \"auth_uri\": \"https://accounts.google.com/o/oauth2/auth\",   \"token_uri\": \"https://oauth2.googleapis.com/token\",   \"auth_provider_x509_cert_url\": \"https://www.googleapis.com/oauth2/v1/certs\",   \"client_x509_cert_url\": \"https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40her-ai-samantha.iam.gserviceaccount.com\",   \"universe_domain\": \"googleapis.com\" }"
+        }
+    },
+    "TracingConfig": {
+        "Mode": "PassThrough"
+    },
+    "RevisionId": "f81d5a36-55e0-4610-ba72-468742f54dc1",
+    "State": "Active",
+    "LastUpdateStatus": "InProgress",
+    "LastUpdateStatusReason": "The function is being created.",
+    "LastUpdateStatusReasonCode": "Creating",
+    "PackageType": "Zip",
+    "Architectures": [
+        "x86_64"
+    ],
+    "EphemeralStorage": {
+        "Size": 512
+    },
+    "SnapStart": {
+        "ApplyOn": "None",
+        "OptimizationStatus": "Off"
+    },
+    "RuntimeVersionConfig": {
+        "RuntimeVersionArn": "arn:aws:lambda:ap-south-1::runtime:0de7d4de4aef04631dc8443fb686ab8bf14de4d4a348cb0d407cce5f48aef7d8"
+    },
+    "LoggingConfig": {
+        "LogFormat": "Text",
+        "LogGroup": "/aws/lambda/her-ai-brain"
+    }
+}

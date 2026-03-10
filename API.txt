@@ -1,0 +1,80 @@
+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
+
+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
+
+
+
+
+
+
+AKIA6CH5WQIIO4BD7T46
+qJuynOA5/sANljWHp4ioOggvNza1jFze8uNqc2yt
+ap-south-1
+
+
+https://aybg83gr69.execute-api.ap-south-1.amazonaws.com/prod/chat
+
+
+AIzaSyDuL7_TQtYas3Tl0lIRyRbBEzA1NxXlEJ0
+
+https://github.com/sudeepbhatta1989/her-ai-samantha
+
+
+git remote add origin https://github.com/https://github.com/sudeepbhatta1989/her-ai-samantha.git
+
+git config --global user.email "sudeepbhatta1989@gmail.com"
+git config --global user.name "sudeepbhatta1989"
+
+00008110-0001609E1A60401E
+
+860998639fe7788f0392b2f169e663b67eb92421
+
+aws lambda update-function-configuration --function-name her-ai-brain --region ap-south-1 --environment "Variables={GROQ_API_KEY=your_groq_key,FIREBASE_SERVICE_ACCOUNT=your_firebase_json,SERPER_API_KEY=860998639fe7788f0392b2f169e663b67eb92421}"
+
+
+
+
+AIzaSyBV94Qw5vWCxzzJD-Q9YEIP89i2Z2Z68Ak
+
+
+
+
+https://awslambda-ap-s-1-tasks.s3.ap-south-1.amazonaws.com/snapshots/966899696144/her-ai-brain-88797491-8640-4dcc-9eb6-b31f77a3ba38?versionId=ptNkphyybt6FnJPN4t2RL6004WnV_cpT&X-Amz-Security-Token=IQoJb3JpZ2luX2VjED4aCmFwLXNvdXRoLTEiRzBFAiEAwR5SMAiRmUSNibZm8e9It1rLXJfr1tTVQ8W2uYpIGUoCIFGxvmB6opnDI1t0YdJ4RVQ9cahyEj%2FEAg4%2FOTljWAWyKosCCAcQBBoMNTQ1MjU1MjAxMzA3IgxoDQCnIogqPXi7VPIq6AHxUHxzo9mKlX6uZha6QL3NJkBQP66Cmjv9XXALpci1ziEyvUp4gDOgcn7dZTI5aVpVb%2FdP8U2EzwrqtyH0FDBbwYY0HmNDcc3LiXyS%2BSIECuMNhe%2FLPS5j4qaOeFq7McoTRvZdB5QVV9e0j1%2FSV6lLZTDEoNBpttjGUUOgUVx3k7U1y2bx9N8NtT8RNW7pSFof%2FmYvOxne4XP6ljoIhAhEi%2B4Z7GzctVJTEQjY7cWiEoj6bCxFGPXpuN0GBfMgzaI3UJlvpULNudd3kYLqMeS46BzYWQilwxoikCCsDg5ieZdSCaHe79snMJvEss0GOo0BiRY%2B%2BD366kAXJ9HN45P6HICcbh7UgBqJVQC87GhbF8GxOKy5QYwICoiUvDrehwhe0KDtWz9Qgm1yk96QDJeUghxHfVMQ3zW3UzpB%2Bwwh%2B%2BU147OHCpHKZ0SLz8jbaag4IISmTXQ6PkwImdLy%2FMpJk3I6yX%2BMXbOwdE7S0gMF%2BetKl%2FzduXPKpt%2BZng0J&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20260308T044752Z&X-Amz-SignedHeaders=host&X-Amz-Expires=600&X-Amz-Credential=ASIAX5456DINTK2BJBR5%2F20260308%2Fap-south-1%2Fs3%2Faws4_request&X-Amz-Signature=1397a587179ac34da8612ea79c4fd996eadb338e3b61daa686dccf02f2b97991
+
+
+
+$url = "https://awslambda-ap-s-1-tasks.s3.ap-south-1.amazonaws.com/snapshots/966899696144/her-ai-brain-c9f67608-88d7-43d7-bfa9-38576a4cb949?versionId=iLPDp7LbOhenXQE4JhGRdqxoAy0H2ZZa&X-Amz-Security-Token=IQoJb3JpZ2luX2VjED4aCmFwLXNvdXRoLTEiRzBFAiEAm%2BxgFNp7XdfPo6wbyYpzDnOWH9MNRu0GJARV%2FTDf1W4CIFOHaC7eZHkqr9sJ3a4ZUPFjyZ%2BC%2BXEeuqfrRGsU1EqPKosCCAcQBBoMNTQ1MjU1MjAxMzA3IgyqtV1hztjD8mAwnaUq6AFtDPLTz1cax0xPCNl51nSFyIjthGO1wub0AnOXxIsDCvkAF6rP5SJuIvgpFETlZBF%2FmQEk89ZFDrc1fngMnQqgzkqittoalHGmdyimy5xkmAiicCk0%2BWhmrrxz2yXJ5%2BZxURp87Cnmd2egMrwyRoqxiR4EL4%2FClXoL3cyxtZIdVLfzH5%2Fjg%2F%2Bu3G%2FS4w0fhyD3kNhupxZqJJ6EtKC9OftvQ49Zm3yJd0wGzHxcIrLZA118umDUm3AO8x8esDXck4MjnAzhL8f8Xn%2Fgka7VHXj4pyPKDzrylHKAaQuv6B0lfWorBAgm9jHuMO3Gss0GOo0BeO9ynSfc89CIW7ca%2FS8FbvnOmyvXuiEVQIi5kYl%2BxN4NstCjxSTcNW1%2BcaVDx95E8vNzAvAnuWt6L6ux4rpy%2B7zGXUXqnxdYvhTfIR5viRQvBFj%2BwpjkdOryPtRv%2B4lA4k2Ra9qYUYbuwxzC%2FpSdNZoctrIE0bWkGcssDd%2FS97ED31ikrOlMb5kAtOFE&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20260308T065928Z&X-Amz-SignedHeaders=host&X-Amz-Expires=600&X-Amz-Credential=ASIAX5456DINXFCMO7PO%2F20260308%2Fap-south-1%2Fs3%2Faws4_request&X-Amz-Signature=54a47bfbb1cb54d3f15b4fca8b9b4b5605a1ea7a6a2540d8252611240654b062"
+
+Invoke-WebRequest -Uri $url -OutFile C:\Projects\her-ai-samantha\backend\current_lambda.zip
+
+
+aws lambda get-function --function-name her-ai-brain --region ap-south-1 --query "Code.Location" --output text
+
+$url = "https://awslambda-ap-s-1-tasks.s3.ap-south-1.amazonaws.com/snapshots/966899696144/her-ai-brain-aca8c0ad-913e-49ff-b9e0-daa0bf5c28a6?versionId=4ysHGYxFL2AV1EkAY3XCcmi6YyXIRSQL&X-Amz-Security-Token=IQoJb3JpZ2luX2VjED0aCmFwLXNvdXRoLTEiRjBEAiA0Qwg5J0ddXciZO%2B1pMPb0kVvKNpci4h5l%2Bf0XENkhugIgQr8QEh%2FST53e%2FFo5cz%2F5mspmm8uJ73JUP8y1YLO%2BUlgqiwIIBxAEGgw1NDUyNTUyMDEzMDciDO%2F1MtPGrGV%2BYH8I3iroAQbrRgIECADT1sEGHlU6YKYBtdc3O0xYDO4MCyH9%2BO4ezYt4SLhnDzm7xpWOJ1nD67LF%2B2%2BOKVZFQpu5M2s7dH48ZaDW%2FCTBTNAsOStfmozGRlI1cOlpJVYf4OwdjhpIWzCDSI4NrH6WC69KpKgv2eyBHlP%2FtXRwaftz1d96exo4UHuvPWJme4dSSSYmoRlrft%2BP%2BUxJ3qY26z%2Bs1m4f%2BxoVrKpxxKCOeX4JBgZWpeLgRHurqUanpjw6Xf1D8HBoqeydNE29886LqTIHAI7lpt%2BQAzW%2Fwj96EBXuRvDqRF3xSyMUFjFVjEMw%2BK%2ByzQY6jgG%2F%2F0NinYqY2lncnC63dvN7keOGvEc4XU1OCiOAMLAFC0L3WuAAJZBMzK19iHofH4H6LEY3SLW0wtrvnIDVRXovtseM79%2FiXwVCCZwqrpCudsIylimUtnRrno9kxtaPdTL%2BkyhxmYzK0wFzrMuxoghDnhBoOWDrGSLnsQcJWuAwvE1MZQPGXOhXUhonwaxu&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20260308T072739Z&X-Amz-SignedHeaders=host&X-Amz-Expires=600&X-Amz-Credential=ASIAX5456DIN4M6LT25O%2F20260308%2Fap-south-1%2Fs3%2Faws4_request&X-Amz-Signature=1bf205eb2f2bc7d477c6e88399281bdef4dd9761c895861a0bd70a8be89937e3"
+
+Invoke-WebRequest -Uri $url -OutFile C:\Projects\her-ai-samantha\backend\current_lambda.zip
+
+Expand-Archive -Force C:\Projects\her-ai-samantha\backend\current_lambda.zip -DestinationPath C:\Projects\her-ai-samantha\backend\lambda_extracted
+
+copy "C:\Users\sudee\Downloads\handler.py" C:\Projects\her-ai-samantha\backend\lambda_extracted\handler.py
+
+Compress-Archive -Force -Path C:\Projects\her-ai-samantha\backend\lambda_extracted\* -DestinationPath C:\Projects\her-ai-samantha\backend\new_lambda.zip
+
+aws lambda update-function-code --function-name her-ai-brain --region ap-south-1 --zip-file fileb://C:\Projects\her-ai-samantha\backend\new_lambda.zip
+
+git add . && git commit -m "fix: remove rescheduleAll call, fix string literal" && git push
+
+
+
+copy /Y "C:\Users\sudee\Downloads\codemagic.yaml" codemagic.yaml
+
+
+{   "type": "service_account",   "project_id": "her-ai-samantha",   "private_key_id": "eaf4fde496b62b99a295b5352d1b8b19dc8cf08b",   "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDRcKl6LBizsvij\nOo8A+ZCWk1Hu+pq7MfI68sWpQ9MqS055nX3xnsujgL1p2sNhRMZjlcSkEALUnZMG\nqDe53UKBo2NXSmJ0tBGwAzsbxvhQwdehFvyt/uddijbZZzISXQ2vyv09RuQPq2IO\n6zHK42phEUJyS6EQPPWledFFjM8UJe/7EXqH6GJlndpAuL24XSTj299UMfL2qk3R\n5xn4ORVvAIRUsIP4Ar0v0n/HoShaTobs4It0Fcd2Z40fBAT/4FwBzoMfALS1bNhL\nVfelnQbY+ZKQvBDISkkGAKnaTx4zCVg8YL2i7nFFaSC6AFtz38KX6ZzBAOLKxyEp\nBmX/y0MXAgMBAAECggEAGIVhQk2RYtCsbaf4gDu34vlCmYE7xnj1jFNKMyQewA/r\nEzAOQ9C8tNro0lDrmSLNO3GYgUDio/QC97+QLrGqDLWNdvXdix5eB8aJEBp+ji3z\nygd/8/spKXl6LH/5i87bQF66wYbgQrllFKwSu1de6Bh2OB2EsPsCI6qchtESmaAV\nDBJfE9YomKFp8dYfgRBWXqlchFPRbd2Y+Oq02eXF+OZsfmRy6lxc875tFJkv7JSi\ny7DWNT5tFTdRhSqCCEi62DqyMcQbbgDmelFbfcyLvVdMX4YdK2dfH7HS79N25Vc/\nJasUvaZvMnfGF8nPVFm7J1cQpHnYJp/8cAfiRLwsMQKBgQD741N3kSF1rA6LL+Dh\nTI2BRg80R7q+YUJGLPwyFgNirbeuJZpF52DwyGZkzimuJpl+Ldv2FFfdsOHqJxhd\n/2Dm662ZcRmlbCPD0qTd2fZNsBdDxA8iY4NCQPcFafkBbcJWXrN1e8lhlcJUFu5O\nT5AGc3ouObYRMJ989ZARtPYNPwKBgQDU2/DAuuGZ7E5Dg3qQi7ZNNE/y0xGe9TFa\nIrWqPZsHPi9mfP4+XyCrmpbzRVOxqQddAxearRdZuAeY4F1h+rNVbPTTPlL8Ib0J\nSY3oi5//y2XFPynjf/Nqfd/iG0/qf3nFR7uMQd0ALN3dO78J1V7ulf+HxExdrk1O\nls8Ikb/cKQKBgQCNSP1QW7+A2Xlu6PQia2YT1NBCatl8X+Fkq2bqUR6lAvu8Wqsl\n+pqNdFq6wEjwvgXqmJ6AcPi4CLcvN66bStt3q0o8fwv7laSZ+lUve0qEWPkzsY0r\npNXDG91y0/YvrvkKqSPQChby/aV6tUIF+uq2M5+cvhI5oiRTWwnsZKx+0QKBgEuP\nR4ciz7K0D5Qnt/pXnf8J8tdf1YF3yG0WpSYpeD659FmNRTMe0ZoY5jy0/2Cxf8uk\nrVxa1U8j5I6AFqYROFe6ta3HEe4ui8wgMB+8cK98pEPAiD4ZzW6gADljOJslZTSC\nojDHsIu/YYKHEumKtIg89tha9kDK/uZG4ndIRbMBAoGAWku/SWztrb2/uEjWf5zS\noWOhZepEcz8Zh9rvbXqvaWbyPDwi5hFT7pOroCduzLr4W26HxOYpGrsMLdywlXAe\nZKpZ/ACYhlgTuvUnmqeOn6IxgRbc8kDb4AuSbIwIhuKhVuEL5e0nlOAu3EMSz/HI\nlpmeTq/J8yFt1aW+LFbCvzc=\n-----END PRIVATE KEY-----\n",   "client_email": "firebase-adminsdk-fbsvc@her-ai-samantha.iam.gserviceaccount.com",   "client_id": "117886926977595647574",   "auth_uri": "https://accounts.google.com/o/oauth2/auth",   "token_uri": "https://oauth2.googleapis.com/token",   "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",   "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40her-ai-samantha.iam.gserviceaccount.com",   "universe_domain": "googleapis.com" }
+
+
+git add lib/screens/jarvis_screen.dart lib/screens/home_screen.dart
+git commit -m "feat: Phase F — fix const error and unused variable"
+git push
+
+
+ a27c0be2b17d43d8a2793bada3f0e42c1dc528f5f9ae44478beb1e38e736fd4c
