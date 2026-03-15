@@ -1,54 +1,47 @@
-name: Build Samantha iOS IPA
+name: Build Samantha iOS
 
 on:
-push:
-branches: [ master ]
-workflow_dispatch:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
 
 jobs:
-build:
-runs-on: macos-latest
+  build:
+    runs-on: macos-latest
 
-steps:
-  - name: Checkout code
-    uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-  - name: Setup Flutter
-    uses: subosito/flutter-action@v2
-    with:
-      channel: stable
-      cache: true
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
 
-  - name: Install dependencies
-    run: flutter pub get
+      - name: Install dependencies
+        run: flutter pub get
 
-  - name: Analyze (errors only)
-    run: flutter analyze --no-fatal-infos || true
+      - name: Install pods
+        run: |
+          cd ios
+          pod install --repo-update
 
-  - name: Install CocoaPods
-    run: |
-      cd ios
-      pod install --repo-update
+      - name: Build unsigned IPA
+        run: |
+          # Build release without signing
+          flutter build ios --release --no-codesign
 
-  - name: Build IPA (no signing)
-    run: |
-      flutter build ipa --release --no-codesign
+          # Manually package into IPA
+          cd build/ios/iphoneos
+          mkdir -p Payload
+          cp -r Runner.app Payload/
+          zip -r ../../../Samantha.ipa Payload/
+          echo "IPA size: $(du -sh ../../../Samantha.ipa)"
 
-  - name: Verify IPA file
-    run: |
-      ls -la build/ios/ipa
-
-  - name: Upload IPA
-    uses: actions/upload-artifact@v4
-    with:
-      name: Samantha-IPA
-      path: build/ios/ipa/*.ipa
-      retention-days: 7
-
-  - name: Upload logs on failure
-    if: failure()
-    uses: actions/upload-artifact@v4
-    with:
-      name: build-logs
-      path: build/
-      retention-days: 2
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: Samantha-iOS-unsigned
+          path: Samantha.ipa
+          retention-days: 7
