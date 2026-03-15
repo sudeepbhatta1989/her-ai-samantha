@@ -1,59 +1,56 @@
-name: Build Samantha iOS
+name: Build Samantha iOS IPA
 
 on:
-  push:
-    branches: [ master ]
-  workflow_dispatch:
+push:
+branches: [ master ]
+workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: macos-latest
+build:
+runs-on: macos-latest
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+```
+steps:
+  - name: Checkout code
+    uses: actions/checkout@v4
 
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          cache: true
+  - name: Setup Flutter
+    uses: subosito/flutter-action@v2
+    with:
+      channel: stable
+      cache: true
 
-      - name: Install dependencies
-        run: flutter pub get
+  - name: Install dependencies
+    run: flutter pub get
 
-      - name: Analyze (errors only)
-        run: flutter analyze --no-fatal-infos || true
+  - name: Analyze (errors only)
+    run: flutter analyze --no-fatal-infos || true
 
-      - name: Install pods
-        run: |
-          cd ios
-          pod install --repo-update
+  - name: Install CocoaPods
+    run: |
+      cd ios
+      pod install --repo-update
 
-      - name: Build iOS for simulator (no signing needed)
-        run: |
-          flutter build ios --simulator --debug
+  - name: Build IPA (no signing)
+    run: |
+      flutter build ipa --release --no-codesign
 
-      - name: Package simulator app
-        run: |
-          APP_PATH=$(find build/ios/iphonesimulator -name "*.app" | head -1)
-          echo "Found app: $APP_PATH"
-          mkdir -p Payload
-          cp -r "$APP_PATH" Payload/
-          zip -r Samantha-Simulator.zip Payload
-          echo "Package size: $(du -sh Samantha-Simulator.zip)"
+  - name: Verify IPA file
+    run: |
+      ls -la build/ios/ipa
 
-      - name: Upload simulator build
-        uses: actions/upload-artifact@v4
-        with:
-          name: Samantha-Simulator
-          path: Samantha-Simulator.zip
-          retention-days: 7
+  - name: Upload IPA
+    uses: actions/upload-artifact@v4
+    with:
+      name: Samantha-IPA
+      path: build/ios/ipa/*.ipa
+      retention-days: 7
 
-      - name: Upload logs on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-logs
-          path: build/
-          retention-days: 2
+  - name: Upload logs on failure
+    if: failure()
+    uses: actions/upload-artifact@v4
+    with:
+      name: build-logs
+      path: build/
+      retention-days: 2
+```
