@@ -15,7 +15,7 @@ class CalendarSyncService {
   CalendarSyncService._();
 
   final DeviceCalendarPlugin _plugin = DeviceCalendarPlugin();
-  static const String _userId = 'default_user'; // Replace with Firebase Auth UID
+  static String get _userId => 'samantha_personal_user';
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   CollectionReference get _col =>

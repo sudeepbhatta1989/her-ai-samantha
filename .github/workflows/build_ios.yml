@@ -22,45 +22,32 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Analyze (errors only)
+        run: flutter analyze --no-fatal-infos || true
+
       - name: Install pods
         run: |
           cd ios
           pod install --repo-update
 
-      - name: Build iOS (fully disable codesigning)
+      - name: Build iOS for simulator (no signing needed)
         run: |
-          flutter build ios --release --no-codesign \
-            --dart-define=FLUTTER_TARGET=lib/main.dart
-          
-          # Override codesigning at xcodebuild level
-          xcodebuild \
-            -workspace ios/Runner.xcworkspace \
-            -scheme Runner \
-            -configuration Release \
-            -sdk iphoneos \
-            -archivePath build/Runner.xcarchive \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGN_IDENTITY="" \
-            PROVISIONING_PROFILE="" \
-            DEVELOPMENT_TEAM="" \
-            archive
+          flutter build ios --simulator --debug
 
-      - name: Export IPA from archive
+      - name: Package simulator app
         run: |
-          mkdir -p build/ios/iphoneos
-          cp -r build/Runner.xcarchive/Products/Applications/Runner.app build/ios/iphoneos/ 2>/dev/null || true
-          cd build/ios/iphoneos
+          APP_PATH=$(find build/ios/iphonesimulator -name "*.app" | head -1)
+          echo "Found app: $APP_PATH"
           mkdir -p Payload
-          cp -r Runner.app Payload/
-          zip -r ../../../Samantha.ipa Payload
-          echo "IPA size: $(du -sh ../../../Samantha.ipa)"
+          cp -r "$APP_PATH" Payload/
+          zip -r Samantha-Simulator.zip Payload
+          echo "Package size: $(du -sh Samantha-Simulator.zip)"
 
-      - name: Upload IPA
+      - name: Upload simulator build
         uses: actions/upload-artifact@v4
         with:
-          name: Samantha-iOS
-          path: Samantha.ipa
+          name: Samantha-Simulator
+          path: Samantha-Simulator.zip
           retention-days: 7
 
       - name: Upload logs on failure

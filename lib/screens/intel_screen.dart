@@ -517,7 +517,7 @@ class _IntelScreenState extends State<IntelScreen>
     return RefreshIndicator(
       color: _cyan,
       backgroundColor: _card,
-      onRefresh: _loadAll,
+      onRefresh: () async => _loadAll(),
       child: ListView.builder(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
         itemCount: items.length,
@@ -748,3 +748,4 @@ class _DetailSheet extends StatelessWidget {
     );
   }
 }
+

@@ -12,7 +12,7 @@ class ScheduleService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   // ── CONFIG: change these two values ────────────────────────────────────────
-  static String get _userId => IdentityService.instance.uidSync;   // → Firebase Auth UID
+  static String get _userId => 'samantha_personal_user';
   static const String _backendUrl = 'https://your-samantha-backend.com'; // → your server
   // ────────────────────────────────────────────────────────────────────────────
 
