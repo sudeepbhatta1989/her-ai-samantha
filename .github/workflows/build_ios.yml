@@ -1,4 +1,3 @@
-@"
 name: Build Samantha iOS
 
 on:
@@ -38,4 +37,3 @@ jobs:
           name: Samantha-iOS
           path: build/ios/iphoneos/Samantha.ipa
           retention-days: 7
-"@ | Out-File -FilePath .github\workflows\build_ios.yml -Encoding utf8
