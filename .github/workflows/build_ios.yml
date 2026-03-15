@@ -22,26 +22,39 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Fix iOS deployment target
-        run: |
-          cd ios
-          sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]*/IPHONEOS_DEPLOYMENT_TARGET = 13.0/g' Runner.xcodeproj/project.pbxproj || true
-
       - name: Install pods
         run: |
           cd ios
           pod install --repo-update
 
-      - name: Build iOS (no codesign)
-        run: flutter build ios --release --no-codesign --verbose
-
-      - name: Create IPA
+      - name: Build iOS (fully disable codesigning)
         run: |
+          flutter build ios --release --no-codesign \
+            --dart-define=FLUTTER_TARGET=lib/main.dart
+          
+          # Override codesigning at xcodebuild level
+          xcodebuild \
+            -workspace ios/Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Release \
+            -sdk iphoneos \
+            -archivePath build/Runner.xcarchive \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            PROVISIONING_PROFILE="" \
+            DEVELOPMENT_TEAM="" \
+            archive
+
+      - name: Export IPA from archive
+        run: |
+          mkdir -p build/ios/iphoneos
+          cp -r build/Runner.xcarchive/Products/Applications/Runner.app build/ios/iphoneos/ 2>/dev/null || true
           cd build/ios/iphoneos
           mkdir -p Payload
           cp -r Runner.app Payload/
           zip -r ../../../Samantha.ipa Payload
-          ls -lh ../../../Samantha.ipa
+          echo "IPA size: $(du -sh ../../../Samantha.ipa)"
 
       - name: Upload IPA
         uses: actions/upload-artifact@v4
