@@ -17,23 +17,43 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
+          cache: true
 
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Build iOS
-        run: flutter build ios --release --no-codesign
+      - name: Fix iOS deployment target
+        run: |
+          cd ios
+          sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = [0-9.]*/IPHONEOS_DEPLOYMENT_TARGET = 13.0/g' Runner.xcodeproj/project.pbxproj || true
+
+      - name: Install pods
+        run: |
+          cd ios
+          pod install --repo-update
+
+      - name: Build iOS (no codesign)
+        run: flutter build ios --release --no-codesign --verbose
 
       - name: Create IPA
         run: |
           cd build/ios/iphoneos
-          mkdir Payload
+          mkdir -p Payload
           cp -r Runner.app Payload/
-          zip -r Samantha.ipa Payload
+          zip -r ../../../Samantha.ipa Payload
+          ls -lh ../../../Samantha.ipa
 
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
           name: Samantha-iOS
-          path: build/ios/iphoneos/Samantha.ipa
+          path: Samantha.ipa
           retention-days: 7
+
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: build/
+          retention-days: 2
