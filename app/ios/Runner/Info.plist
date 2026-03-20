@@ -49,6 +49,12 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+
+	<key>NSCalendarsUsageDescription</key>
+	<string>Samantha needs calendar access to sync and manage your events.</string>
+	<key>NSCalendarsWriteOnlyAccessUsageDescription</key>
+	<string>Samantha needs write access to create calendar events for you.</string>
+
     <key>UIBackgroundModes</key>
     <array>
         <string>fetch</string>

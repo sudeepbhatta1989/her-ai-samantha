@@ -1,0 +1,44 @@
+# Secrets & credentials — NEVER commit these
+API.txt
+backend/.env
+backend/*.json
+*.env
+*.pem
+*service-account*.json
+*firebase-adminsdk*.json
+
+# Python
+backend/__pycache__/
+backend/*.pyc
+**/__pycache__/
+*.pyc
+*.pyo
+
+# Lambda build artifacts
+backend/lambda/
+backend/lambda_clean/
+backend/lambda_extracted/
+backend/*.zip
+*.zip
+
+# Flutter/Dart
+app/.dart_tool/
+app/build/
+app/.flutter-plugins
+app/.flutter-plugins-dependencies
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude worktrees internal
+.claude/
+
+# OpenHands config (contains API keys)
+**/.openhands/
+.openhands/
