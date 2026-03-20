@@ -420,8 +420,10 @@ Message: "{user_message}"
 - date_modify: changing plan for a SPECIFIC date that is NOT today or tomorrow — "update my plan for Thursday", "reschedule Friday", "I have a holiday on 15th March", "next Monday is WFH"
 - modify_plan: explicitly asking to CHANGE today\'s plan — "remove exercise from today", "add a task to today", "reschedule my afternoon", "cancel my evening plan"
 - project: build app, start project, work on Traveler Tree / Gita App
-- reflect: how am I doing, weekly review, my progress, habit analysis
+- reflect: how am I doing, weekly review, my progress, show me my week
+- monitor: quick check on habits/streaks, am I on track, performance report, how are my streaks
 - habit: mark habit done, check streak, I finished X, I did my X today
+- strategy: life strategy, monthly plan, goal conflicts, what to focus on this month, rebalance my life
 - execute: set reminder, add goal, send notification
 
 ━━━ CRITICAL CLASSIFICATION RULES ━━━
@@ -814,6 +816,100 @@ Return ONLY valid JSON:
 
     except Exception as e:
         print(f'Planner agent error: {e}')
+        return None
+
+
+# ─────────────────────────────────────────
+# STRATEGY AGENT — monthly life strategy & goal conflict detection
+# ─────────────────────────────────────────
+def strategy_agent(db, user_id, query, profile):
+    """Generate monthly life strategy with goal conflict detection and rebalancing suggestions"""
+    try:
+        projects = get_active_projects(db, user_id)
+        streaks = get_habit_streaks(db, user_id)
+        logs = get_weekly_summary(db, user_id)
+        project_summary = json.dumps([
+            {'title': p.get('title', ''), 'goal': p.get('goal', ''), 'status': p.get('status', '')}
+            for p in projects[:5]
+        ])
+        habit_summary = json.dumps(streaks, default=str)
+        mood_counts = {}
+        for log in logs:
+            mood = log.get('mood', 'neutral')
+            mood_counts[mood] = mood_counts.get(mood, 0) + 1
+        goals = profile.get('goals', [])
+        projects_info = profile.get('projects', {})
+        prompt = f"""You are Samantha, Sudeep's personal AI Chief of Staff. Generate a monthly life strategy analysis.
+USER QUERY: "{query}"
+CURRENT PROJECTS: {project_summary if projects else "No active projects yet"}
+HABIT STREAKS: {habit_summary}
+MOOD PATTERN: {json.dumps(mood_counts)}
+LIFE CONTEXT: Goals: {json.dumps(goals)}, Projects: {json.dumps(projects_info)}
+Return ONLY valid JSON:
+{{"strategy_summary": "2-3 sentence overview","domain_scores": {{"health": {{"score": 0,"trend": "stable","note": ""}},"creativity": {{"score": 0,"trend": "stable","note": ""}},"career": {{"score": 0,"trend": "stable","note": ""}},"learning": {{"score": 0,"trend": "stable","note": ""}},"finance": {{"score": 0,"trend": "stable","note": ""}}}},"goal_conflicts": [{{"conflict": "example","severity": "medium","suggestion": "how to resolve"}}],"top_recommendation": "single most important change","schedule_rebalance": {{"drop_or_reduce": [],"increase": [],"add_new": []}},"this_month_focus": "one sentence","samanthas_message": "personal message"}}"""
+        strategy_raw = ask_groq([{'role': 'user', 'content': prompt}], max_tokens=900)
+        clean = strategy_raw.strip().replace('```json', '').replace('```', '').strip()
+        if '{' in clean:
+            clean = clean[clean.index('{'):clean.rindex('}')+1]
+        strategy = json.loads(clean)
+        try:
+            db.collection(f'users/{user_id}/strategy_reports').add({
+                **strategy, 'query': query,
+                'generated_at': firestore.SERVER_TIMESTAMP,
+                'date': datetime.date.today().isoformat(),
+                'month': datetime.date.today().strftime('%Y-%m'),
+            })
+        except Exception as e:
+            print(f'Strategy save error: {e}')
+        return strategy
+    except Exception as e:
+        print(f'Strategy agent error: {e}')
+        return None
+
+
+# ─────────────────────────────────────────
+# MONITORING AGENT — habit pattern analysis & productivity trends
+# ─────────────────────────────────────────
+def monitoring_agent(db, user_id, query):
+    """Analyze habit patterns, productivity trends, mood correlations over 14 days"""
+    try:
+        two_weeks_ago = (datetime.date.today() - datetime.timedelta(days=14)).isoformat()
+        logs = list(db.collection(f'users/{user_id}/daily_logs').where('date', '>=', two_weeks_ago).limit(30).stream())
+        log_data = [l.to_dict() for l in logs]
+        streaks = get_habit_streaks(db, user_id)
+        convs = list(db.collection(f'users/{user_id}/conversations').where('date', '>=', two_weeks_ago).limit(30).stream())
+        conv_moods = [c.to_dict().get('mood', 'neutral') for c in convs]
+        mood_dist = {}
+        for m in conv_moods:
+            mood_dist[m] = mood_dist.get(m, 0) + 1
+        habit_days = {}
+        for log in log_data:
+            for h in log.get('habits_completed', []):
+                habit_days[h] = habit_days.get(h, 0) + 1
+        prompt = f"""Analyze Sudeep's productivity and habit patterns over the last 14 days.
+USER QUESTION: "{query}"
+HABIT STREAKS: {json.dumps(streaks, default=str)}
+HABIT COMPLETION (days/14): {json.dumps(habit_days)}
+MOOD DISTRIBUTION: {json.dumps(mood_dist)}
+TOTAL CONVERSATIONS: {len(conv_moods)}
+Return ONLY valid JSON:
+{{"performance_score": 0,"summary": "2-3 sentence assessment","habit_analysis": [{{"habit": "exercise","completion_rate": "0/14","trend": "stable","insight": ""}}],"best_performing_area": "","needs_attention": "","mood_pattern": "","productivity_insight": "","streak_at_risk": "","action_for_tomorrow": "","samanthas_message": ""}}"""
+        analysis_raw = ask_groq([{'role': 'user', 'content': prompt}], max_tokens=700)
+        clean = analysis_raw.strip().replace('```json', '').replace('```', '').strip()
+        if '{' in clean:
+            clean = clean[clean.index('{'):clean.rindex('}')+1]
+        analysis = json.loads(clean)
+        try:
+            db.collection(f'users/{user_id}/monitoring_reports').add({
+                **analysis, 'query': query,
+                'generated_at': firestore.SERVER_TIMESTAMP,
+                'date': datetime.date.today().isoformat(),
+            })
+        except Exception as e:
+            print(f'Monitoring save error: {e}')
+        return analysis
+    except Exception as e:
+        print(f'Monitoring agent error: {e}')
         return None
 
 
@@ -1583,6 +1679,35 @@ Copy the code to your project after reviewing."""
                 reply += f"\n\n💪 {streak} days in a row — keep the momentum going!"
             return reply, 'habit_agent', {'habit': detected_habit, 'streak': streak}
         # Habit detected but couldn't identify which — fall through to chat
+        return None, None, {}
+
+    elif intent == 'monitor':
+        analysis = monitoring_agent(db, user_id, user_message)
+        if analysis:
+            log_agent_action(db, user_id, 'monitoring_agent', user_message, analysis.get('summary', '')[:100])
+            reply = analysis.get('samanthas_message', '')
+            score = analysis.get('performance_score', 0)
+            reply += f"\n\n📊 Performance score: {score}/100"
+            if analysis.get('needs_attention'):
+                reply += f"\n⚠️ Needs attention: {analysis['needs_attention']}"
+            if analysis.get('action_for_tomorrow'):
+                reply += f"\n\n🎯 Tomorrow: {analysis['action_for_tomorrow']}"
+            return reply, 'monitoring_agent', {'analysis': analysis}
+        return None, None, {}
+
+    elif intent == 'strategy':
+        strategy = strategy_agent(db, user_id, user_message, profile)
+        if strategy:
+            log_agent_action(db, user_id, 'strategy_agent', user_message, strategy.get('this_month_focus', '')[:100])
+            reply = strategy.get('samanthas_message', '')
+            if strategy.get('top_recommendation'):
+                reply += f"\n\n🧭 Top recommendation: {strategy['top_recommendation']}"
+            if strategy.get('this_month_focus'):
+                reply += f"\n\n🎯 This month: {strategy['this_month_focus']}"
+            conflicts = strategy.get('goal_conflicts', [])
+            if conflicts:
+                reply += f"\n\n⚡ Conflict: {conflicts[0].get('conflict', '')} — {conflicts[0].get('suggestion', '')}"
+            return reply, 'strategy_agent', {'strategy': strategy}
         return None, None, {}
 
     elif intent == 'execute':
