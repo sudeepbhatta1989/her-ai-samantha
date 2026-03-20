@@ -334,8 +334,11 @@ Message: "{user_message}"
 - tomorrow_modify: giving NEW SCHEDULE FACTS that change tomorrow\'s plan — "tomorrow is WFH", "I have a meeting at 3pm tomorrow", "cancel travel tomorrow", "tomorrow starts at 8am"
 - modify_plan: explicitly asking to CHANGE today\'s plan — "remove exercise from today", "add a task to today", "reschedule my afternoon", "cancel my evening plan"
 - project: build app, start project, work on Traveler Tree / Gita App
-- reflect: how am I doing, weekly review, my progress, habit analysis
+- reflect: how am I doing, weekly review, my progress, habit analysis, show me my week
+- monitor: quick check on habits/productivity, am I on track, how are my streaks, performance report
 - habit: mark habit done, check streak, I finished X, I did my X today
+- strategy: life strategy, monthly plan, goal conflicts, what should I focus on this month, rebalance my life
+- code: build me, code me, create a screen, write a function, generate code, help me code
 - execute: set reminder, add goal, send notification
 
 ━━━ CRITICAL CLASSIFICATION RULES ━━━
@@ -358,6 +361,21 @@ THESE ARE tomorrow_modify:
 
 KEY RULE: If user is ASKING A QUESTION about the plan → chat
           If user is giving NEW FACTS to CHANGE the plan → modify_plan or tomorrow_modify
+
+THESE ARE "monitor" NOT "reflect":
+- "how are my streaks" → monitor (quick check, no full reflection)
+- "am I on track this week" → monitor
+- "show me my habit progress" → monitor
+
+THESE ARE "strategy" NOT "chat":
+- "what should I focus on this month" → strategy
+- "help me rebalance my life" → strategy
+- "I feel like I'm spreading too thin" → strategy
+
+THESE ARE "code" NOT "chat":
+- "build me a new screen for X" → code
+- "write a Flutter widget for Y" → code
+- "create a Lambda function that does Z" → code
 
 Return ONLY valid JSON, no other text:
 {{"intent": "chat", "confidence": 0.9, "sub_task": "brief description of what user wants"}}"""
@@ -673,6 +691,241 @@ Return ONLY valid JSON:
 
     except Exception as e:
         print(f'Planner agent error: {e}')
+        return None
+
+
+# ─────────────────────────────────────────
+# STRATEGY AGENT — monthly life strategy & goal conflict detection
+# Phase 5: Analyzes all goals, identifies conflicts, recommends rebalancing
+# ─────────────────────────────────────────
+def strategy_agent(db, user_id, query, profile):
+    """Generate monthly life strategy with goal conflict detection and rebalancing suggestions"""
+    try:
+        # Get active projects and recent habit data
+        projects = get_active_projects(db, user_id)
+        streaks = get_habit_streaks(db, user_id)
+        logs = get_weekly_summary(db, user_id)
+
+        # Summarize current state
+        project_summary = json.dumps([
+            {'title': p.get('title', ''), 'goal': p.get('goal', ''), 'status': p.get('status', '')}
+            for p in projects[:5]
+        ])
+
+        habit_summary = json.dumps(streaks, default=str)
+
+        mood_counts = {}
+        for log in logs:
+            mood = log.get('mood', 'neutral')
+            mood_counts[mood] = mood_counts.get(mood, 0) + 1
+
+        # Build life context from profile
+        life_domains = profile.get('life_domains', ['career', 'creativity', 'health', 'finance', 'relationships', 'learning', 'personal_growth'])
+        goals = profile.get('goals', [])
+        projects_info = profile.get('projects', {})
+
+        prompt = f"""You are Samantha, Sudeep's personal AI Chief of Staff. Generate a monthly life strategy analysis.
+
+USER QUERY: "{query}"
+
+CURRENT PROJECTS:
+{project_summary if projects else "No active projects yet"}
+
+HABIT STREAKS (last 30 days):
+{habit_summary}
+
+MOOD PATTERN (last 7 days):
+{json.dumps(mood_counts)}
+
+LIFE CONTEXT FROM PROFILE:
+- Goals: {json.dumps(goals)}
+- Projects: {json.dumps(projects_info)}
+
+Analyze his life strategy and generate actionable recommendations. Return ONLY valid JSON:
+{{
+  "strategy_summary": "2-3 sentence overview of where Sudeep is heading right now",
+  "domain_scores": {{
+    "health": {{"score": 0-10, "trend": "improving|declining|stable", "note": "one line"}},
+    "creativity": {{"score": 0-10, "trend": "improving|declining|stable", "note": "one line"}},
+    "career": {{"score": 0-10, "trend": "improving|declining|stable", "note": "one line"}},
+    "learning": {{"score": 0-10, "trend": "improving|declining|stable", "note": "one line"}},
+    "finance": {{"score": 0-10, "trend": "improving|declining|stable", "note": "one line"}}
+  }},
+  "goal_conflicts": [
+    {{"conflict": "e.g. Corporate job hours vs creative project time", "severity": "high|medium|low", "suggestion": "how to resolve"}}
+  ],
+  "top_recommendation": "The single most important strategic change Sudeep should make this month",
+  "schedule_rebalance": {{
+    "drop_or_reduce": ["activity to reduce and why"],
+    "increase": ["activity to prioritize and why"],
+    "add_new": ["new habit or activity to consider"]
+  }},
+  "this_month_focus": "One sentence: what to focus on above all else in the next 30 days",
+  "samanthas_message": "Personal strategic message from Samantha — honest, warm, forward-looking"
+}}"""
+
+        strategy_raw = ask_groq([{'role': 'user', 'content': prompt}], max_tokens=900)
+        clean = strategy_raw.strip().replace('```json', '').replace('```', '').strip()
+        if '{' in clean:
+            clean = clean[clean.index('{'):clean.rindex('}')+1]
+        strategy = json.loads(clean)
+
+        # Save to Firestore for the AI Suggestions screen
+        try:
+            db.collection(f'users/{user_id}/strategy_reports').add({
+                **strategy,
+                'query': query,
+                'generated_at': firestore.SERVER_TIMESTAMP,
+                'date': datetime.date.today().isoformat(),
+                'month': datetime.date.today().strftime('%Y-%m'),
+            })
+        except Exception as e:
+            print(f'Strategy save error: {e}')
+
+        return strategy
+
+    except Exception as e:
+        print(f'Strategy agent error: {e}')
+        return None
+
+
+# ─────────────────────────────────────────
+# MONITORING AGENT — habit pattern analysis & productivity trends
+# Phase 4: Analyzes patterns, not just streaks — understands WHY and WHEN
+# ─────────────────────────────────────────
+def monitoring_agent(db, user_id, query):
+    """Analyze habit patterns, productivity trends, mood correlations"""
+    try:
+        # Get last 14 days of data
+        two_weeks_ago = (datetime.date.today() - datetime.timedelta(days=14)).isoformat()
+        logs = list(
+            db.collection(f'users/{user_id}/daily_logs')
+            .where('date', '>=', two_weeks_ago)
+            .limit(30).stream()
+        )
+        log_data = [l.to_dict() for l in logs]
+
+        # Get habit streaks and history
+        streaks = get_habit_streaks(db, user_id)
+
+        # Get recent conversations for context
+        convs = list(
+            db.collection(f'users/{user_id}/conversations')
+            .where('date', '>=', two_weeks_ago)
+            .limit(30).stream()
+        )
+        conv_moods = [c.to_dict().get('mood', 'neutral') for c in convs]
+
+        # Compute mood distribution
+        mood_dist = {}
+        for m in conv_moods:
+            mood_dist[m] = mood_dist.get(m, 0) + 1
+
+        # Compute habit completion data from logs
+        habit_days = {}
+        for log in log_data:
+            completed = log.get('habits_completed', [])
+            for h in completed:
+                habit_days[h] = habit_days.get(h, 0) + 1
+
+        prompt = f"""You are Samantha, Sudeep's personal AI. Analyze his productivity and habit patterns over the last 14 days.
+
+USER QUESTION: "{query}"
+
+HABIT STREAKS:
+{json.dumps(streaks, default=str)}
+
+HABIT COMPLETION (days completed in last 14):
+{json.dumps(habit_days)}
+
+MOOD DISTRIBUTION (last 14 days of conversations):
+{json.dumps(mood_dist)}
+
+TOTAL CONVERSATIONS THIS PERIOD: {len(conv_moods)}
+
+Generate a concise monitoring report. Return ONLY valid JSON:
+{{
+  "performance_score": 0-100,
+  "summary": "2-3 sentence honest assessment of how Sudeep is doing",
+  "habit_analysis": [
+    {{"habit": "exercise", "completion_rate": "X/14 days", "trend": "improving|declining|consistent", "insight": "one line observation"}}
+  ],
+  "best_performing_area": "which habit or domain is strongest",
+  "needs_attention": "which habit or area needs the most focus",
+  "mood_pattern": "one sentence about emotional state this period",
+  "productivity_insight": "key observation about work patterns",
+  "streak_at_risk": "habit most likely to break soon (if any)",
+  "action_for_tomorrow": "one specific thing Sudeep should do tomorrow to improve",
+  "samanthas_message": "Warm, honest message from Samantha about how he's doing this week"
+}}"""
+
+        analysis_raw = ask_groq([{'role': 'user', 'content': prompt}], max_tokens=700)
+        clean = analysis_raw.strip().replace('```json', '').replace('```', '').strip()
+        if '{' in clean:
+            clean = clean[clean.index('{'):clean.rindex('}')+1]
+        analysis = json.loads(clean)
+
+        # Save monitoring report
+        try:
+            db.collection(f'users/{user_id}/monitoring_reports').add({
+                **analysis,
+                'query': query,
+                'generated_at': firestore.SERVER_TIMESTAMP,
+                'date': datetime.date.today().isoformat(),
+            })
+        except Exception as e:
+            print(f'Monitoring save error: {e}')
+
+        return analysis
+
+    except Exception as e:
+        print(f'Monitoring agent error: {e}')
+        return None
+
+
+# ─────────────────────────────────────────
+# CODING AGENT — Flutter/Python code generation
+# Phase 6: Understands Samantha codebase, generates ready-to-use code
+# ─────────────────────────────────────────
+def coding_agent(db, user_id, query):
+    """Generate Flutter/Python/Firestore code with Samantha codebase awareness"""
+    try:
+        prompt = f"""You are Samantha's coding agent. You understand the Samantha AI codebase.
+
+CODEBASE CONTEXT:
+- Flutter app (iOS): lib/screens/ (chat_screen, home_screen, plan_screen, jarvis_screen, history_screen)
+- Services: schedule_service.dart, notification_service.dart, calendar_sync_service.dart
+- Backend: Python AWS Lambda (handler.py) — main chat + agent orchestration
+- Database: Firebase Firestore — users/user1/{{conversations, memories, habits, dailyPlans, projects}}
+- AI: Groq llama-3.3-70b via ask_groq() function
+- Theme: Dark, Color(0xFF00D4FF) cyan primary, Color(0xFF7C3AED) purple secondary, Sora font
+
+USER REQUEST: "{query}"
+
+Generate production-ready code. Return ONLY valid JSON:
+{{
+  "task": "one line description of what you're building",
+  "file_name": "e.g. lib/screens/goals_screen.dart or handler.py",
+  "language": "dart|python",
+  "code": "complete, ready-to-use code block",
+  "integration_steps": ["step 1: where to add this", "step 2: what to import", "step 3: how to call it"],
+  "dependencies": ["any new pubspec.yaml or pip packages needed (empty if none)"],
+  "notes": "any important caveats or usage notes"
+}}"""
+
+        code_raw = ask_groq([{'role': 'user', 'content': prompt}], max_tokens=1500)
+        clean = code_raw.strip().replace('```json', '').replace('```', '').strip()
+        if '{' in clean:
+            clean = clean[clean.index('{'):clean.rindex('}')+1]
+        result = json.loads(clean)
+
+        # Log code generation
+        log_agent_action(db, user_id, 'coding_agent', query, result.get('task', ''))
+
+        return result
+
+    except Exception as e:
+        print(f'Coding agent error: {e}')
         return None
 
 
@@ -1038,6 +1291,53 @@ def agent_orchestrator(db, user_id, user_message, intent, sub_task, profile):
                 reply += f"\n\n💪 {streak} days in a row — keep the momentum going!"
             return reply, 'habit_agent', {'habit': detected_habit, 'streak': streak}
         # Habit detected but couldn't identify which — fall through to chat
+        return None, None, {}
+
+    elif intent == 'monitor':
+        analysis = monitoring_agent(db, user_id, user_message)
+        if analysis:
+            log_agent_action(db, user_id, 'monitoring_agent', user_message, analysis.get('summary', '')[:100])
+            reply = analysis.get('samanthas_message', '')
+            score = analysis.get('performance_score', 0)
+            reply += f"\n\n📊 Performance score: {score}/100"
+            if analysis.get('needs_attention'):
+                reply += f"\n⚠️ Needs attention: {analysis['needs_attention']}"
+            if analysis.get('action_for_tomorrow'):
+                reply += f"\n\n🎯 Tomorrow: {analysis['action_for_tomorrow']}"
+            return reply, 'monitoring_agent', {'analysis': analysis}
+        return None, None, {}
+
+    elif intent == 'strategy':
+        strategy = strategy_agent(db, user_id, user_message, profile)
+        if strategy:
+            log_agent_action(db, user_id, 'strategy_agent', user_message, strategy.get('this_month_focus', '')[:100])
+            reply = strategy.get('samanthas_message', '')
+            if strategy.get('top_recommendation'):
+                reply += f"\n\n🧭 Top recommendation: {strategy['top_recommendation']}"
+            if strategy.get('this_month_focus'):
+                reply += f"\n\n🎯 This month focus: {strategy['this_month_focus']}"
+            conflicts = strategy.get('goal_conflicts', [])
+            if conflicts:
+                reply += f"\n\n⚡ Conflict detected: {conflicts[0].get('conflict', '')} — {conflicts[0].get('suggestion', '')}"
+            return reply, 'strategy_agent', {'strategy': strategy}
+        return None, None, {}
+
+    elif intent == 'code':
+        code_result = coding_agent(db, user_id, user_message)
+        if code_result:
+            log_agent_action(db, user_id, 'coding_agent', user_message, code_result.get('task', '')[:100])
+            reply = f"Here's the code for: **{code_result.get('task', user_message)}**\n\n"
+            reply += f"📄 File: `{code_result.get('file_name', 'unknown')}`\n\n"
+            reply += f"```{code_result.get('language', 'dart')}\n{code_result.get('code', '')}\n```\n\n"
+            steps = code_result.get('integration_steps', [])
+            if steps:
+                reply += "**Integration steps:**\n" + '\n'.join(f"{i+1}. {s}" for i, s in enumerate(steps))
+            deps = code_result.get('dependencies', [])
+            if deps:
+                reply += f"\n\n**Dependencies needed:** {', '.join(deps)}"
+            if code_result.get('notes'):
+                reply += f"\n\n📝 {code_result['notes']}"
+            return reply, 'coding_agent', {'code': code_result}
         return None, None, {}
 
     elif intent == 'execute':
