@@ -1,4 +1,4 @@
-import json, os, requests, datetime
+import json, os, requests, datetime, concurrent.futures, threading
 from firebase_admin import credentials, firestore, initialize_app
 import firebase_admin
 
@@ -90,11 +90,36 @@ def needs_reschedule(message):
 # ─────────────────────────────────────────
 # FIREBASE INIT
 # ─────────────────────────────────────────
+_firebase_ok = None  # None=untested, True=ok, False=broken
+_firebase_lock = threading.Lock()
+
+def _test_firestore_connection():
+    """Probe Firestore with a real read to confirm auth works."""
+    db = firestore.client()
+    db.collection('_health').document('ping').get()
+
 def init_firebase():
-    if not firebase_admin._apps:
-        service_account = json.loads(os.environ.get('FIREBASE_SERVICE_ACCOUNT', '{}'))
-        cred = credentials.Certificate(service_account)
-        initialize_app(cred)
+    global _firebase_ok
+    with _firebase_lock:
+        if _firebase_ok is not None:
+            return _firebase_ok
+        try:
+            if not firebase_admin._apps:
+                service_account = json.loads(os.environ.get('FIREBASE_SERVICE_ACCOUNT', '{}'))
+                cred = credentials.Certificate(service_account)
+                initialize_app(cred)
+            # Probe with 8-second timeout so Lambda never hangs 30s on bad credentials
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as ex:
+                future = ex.submit(_test_firestore_connection)
+                future.result(timeout=8)
+            _firebase_ok = True
+        except concurrent.futures.TimeoutError:
+            print('[Samantha] Firebase probe timed out — running in offline mode')
+            _firebase_ok = False
+        except Exception as e:
+            print(f'[Samantha] Firebase unavailable: {e}')
+            _firebase_ok = False
+    return _firebase_ok
 
 # ─────────────────────────────────────────
 # DATA FETCHERS
@@ -2281,7 +2306,7 @@ def _send_push(db, user_id, title, body, data=None):
 
 def lambda_handler(event, context):
     try:
-        init_firebase()
+        firebase_ready = init_firebase()
         # Handle both API Gateway (body=string) and direct Lambda invocation (event=dict)
         raw_body = event.get('body', None)
         if raw_body is None:
@@ -2297,7 +2322,15 @@ def lambda_handler(event, context):
         user_message = body.get('message', '')
         action = body.get('action', 'chat')
 
-        db = firestore.client()
+        # If Firebase is down and this isn't a chat action, return a friendly error immediately
+        if not firebase_ready and action != 'chat':
+            return _response({
+                'error': 'database_offline',
+                'reply': "I'm having trouble connecting to my memory right now. Chat still works! For plans, history, and habits, please try again in a few minutes.",
+                'status': 'offline'
+            })
+
+        db = firestore.client() if firebase_ready else None
 
         # ── Generate daily plan ──
         # ── Get existing plan (read-only, no regeneration) ──
@@ -2786,13 +2819,18 @@ def lambda_handler(event, context):
         # Detect mood
         mood = detect_mood(user_message)
 
-        # Gather all context
-        profile = get_user_profile(db, user_id)
-        recent_convs = get_recent_conversations(db, user_id, limit=20)
-        important_memories = get_important_memories(db, user_id, limit=10)
-        today_plan = get_todays_plan(db, user_id)
-        habit_streaks = get_habit_streaks(db, user_id)
-        weekly_summary = get_weekly_summary(db, user_id)
+        if db is not None:
+            # Full mode: gather all context from Firestore
+            profile = get_user_profile(db, user_id)
+            recent_convs = get_recent_conversations(db, user_id, limit=20)
+            important_memories = get_important_memories(db, user_id, limit=10)
+            today_plan = get_todays_plan(db, user_id)
+            habit_streaks = get_habit_streaks(db, user_id)
+            weekly_summary = get_weekly_summary(db, user_id)
+        else:
+            # Offline mode: no Firestore context, still answer via Groq
+            profile, recent_convs, important_memories = {}, [], []
+            today_plan, habit_streaks, weekly_summary = {}, {}, {}
 
         # ── JARVIS: Intent Classification ──
         intent, sub_task = classify_intent(user_message)
@@ -2805,9 +2843,10 @@ def lambda_handler(event, context):
 
         if agent_reply:
             # Agent handled it — save and return with any extra data (plan_updated, etc.)
-            save_conversation(db, user_id, user_message, agent_reply, mood, session_id=body.get("session_id"))
-            extract_and_save_memory(db, user_id, user_message, agent_reply, mood)
-            update_daily_log(db, user_id, mood, user_message)
+            if db is not None:
+                save_conversation(db, user_id, user_message, agent_reply, mood, session_id=body.get("session_id"))
+                extract_and_save_memory(db, user_id, user_message, agent_reply, mood)
+                update_daily_log(db, user_id, mood, user_message)
             response_body = {
                 'reply': agent_reply,
                 'mood': mood,
@@ -2852,7 +2891,8 @@ Be realistic — fit as much as possible in the remaining day."""
                     slot_summary.append(f"{t} — {task}")
             plan_lines = '\n'.join(slot_summary[:6])
             ai_reply = f"Done! Rescheduled everything from {current_time} onwards:\n\n{plan_lines}\n\nPlan screen is updated — go check it!"
-            save_conversation(db, user_id, user_message, ai_reply, mood, session_id=body.get("session_id"))
+            if db is not None:
+                save_conversation(db, user_id, user_message, ai_reply, mood, session_id=body.get("session_id"))
             return _response({
                 'reply': ai_reply,
                 'mood': mood,
@@ -2873,13 +2913,15 @@ Be realistic — fit as much as possible in the remaining day."""
 
         ai_reply = ask_groq(messages, max_tokens=400)
 
-        save_conversation(db, user_id, user_message, ai_reply, mood, session_id=body.get("session_id"))
-        extract_and_save_memory(db, user_id, user_message, ai_reply, mood)
-        update_daily_log(db, user_id, mood, user_message)
+        if db is not None:
+            save_conversation(db, user_id, user_message, ai_reply, mood, session_id=body.get("session_id"))
+            extract_and_save_memory(db, user_id, user_message, ai_reply, mood)
+            update_daily_log(db, user_id, mood, user_message)
 
         # Phase D/E: Log every interaction for self-improvement analysis
         try:
-            log_interaction(db, user_id, user_message, intent, agent_used, bool(ai_reply))
+            if db is not None:
+                log_interaction(db, user_id, user_message, intent, agent_used, bool(ai_reply))
         except Exception as _le:
             print(f"log_interaction error: {_le}")
 

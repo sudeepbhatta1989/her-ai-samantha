@@ -11,9 +11,9 @@ class ScheduleService {
 
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  // ── CONFIG: change these two values ────────────────────────────────────────
-  static String get _userId => 'samantha_personal_user';
-  static const String _backendUrl = 'https://your-samantha-backend.com'; // → your server
+  // ── CONFIG ──────────────────────────────────────────────────────────────────
+  static String get _userId => 'user1';
+  static const String _backendUrl = 'https://aybg83gr69.execute-api.ap-south-1.amazonaws.com/prod';
   // ────────────────────────────────────────────────────────────────────────────
 
   CollectionReference get _col =>
