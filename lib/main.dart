@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:provider/provider.dart';
 import 'screens/splash_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/chat_screen.dart';
 import 'screens/plan_screen.dart';
+import 'screens/schedule_screen.dart';
 import 'screens/history_screen.dart';
 import 'screens/jarvis_screen.dart';
 import 'services/notification_service.dart';
+import 'providers/schedule_provider.dart';
 
 // Global navigator key so NotificationService can route without BuildContext
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -38,7 +41,12 @@ void main() async {
     debugPrint('[Samantha] NotificationService init failed: $e');
   }
 
-  runApp(const HerAIApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => ScheduleProvider(),
+      child: const HerAIApp(),
+    ),
+  );
 }
 
 class HerAIApp extends StatelessWidget {
@@ -95,6 +103,7 @@ class MainShellState extends State<MainShell> {
     const HomeScreen(),
     const ChatScreen(),
     PlanScreen(key: _planKey),
+    const ScheduleScreen(),
     const JarvisScreen(),
     const HistoryScreen(),
   ];
@@ -134,6 +143,11 @@ class MainShellState extends State<MainShell> {
             icon: Icon(Icons.calendar_today_outlined),
             selectedIcon: Icon(Icons.calendar_today),
             label: 'Plan',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.calendar_month_outlined),
+            selectedIcon: Icon(Icons.calendar_month),
+            label: 'Schedule',
           ),
           NavigationDestination(
             icon: Icon(Icons.bolt_outlined),
