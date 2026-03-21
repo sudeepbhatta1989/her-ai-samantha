@@ -12,6 +12,10 @@ Endpoints:
 import os, io, hashlib, time, base64
 from pathlib import Path
 
+# Accept Coqui XTTS v2 non-commercial license (CPML) automatically
+# https://coqui.ai/cpml — this Space is non-commercial / personal use
+os.environ['COQUI_TOS_AGREED'] = '1'
+
 REFERENCE = Path(__file__).parent / 'samantha_reference.wav'
 CACHE_DIR = Path('/tmp/samantha_cache')
 CACHE_DIR.mkdir(exist_ok=True)
