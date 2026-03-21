@@ -437,7 +437,7 @@ Message: "{user_message}"
 ━━━ INTENT CATEGORIES ━━━
 - chat: ANY question about the existing plan, asking what to do at a time, asking about activities, greetings, small talk, status updates
 - research: find info, news, analysis, what is X, tell me about X, movies, events, current news
-- content: create script, write content, make a script, draft a post, content for Phokat ka Gyan, script for Corporate Kurukshetra, YouTube idea, Instagram caption, debate script, write a reel script
+- content: create script, write content, make a script, draft a post, content for Phokat ka Gyan, script for Corporate Kurukshetra, YouTube idea, Instagram caption, debate script, write a reel script, "Chapter X Shloka Y", corporate kurukshetra script, battlefield corporate script
 - code: build a widget, write a Lambda function, create a Flutter screen, generate code for X, write a function that does Y, code for feature Z
 - plan: "make me a plan for today", "create today\'s schedule", "plan my day" — ONLY when explicitly asking to CREATE a new plan
 - tomorrow_ask: reading/asking about tomorrow\'s plan — "what are plans for tomorrow", "brief me on tomorrow", "show tomorrow\'s schedule"
@@ -1304,7 +1304,9 @@ def agent_orchestrator(db, user_id, user_message, intent, sub_task, profile):
             profile = get_user_profile(db, user_id)
 
             # Detect content type
-            if any(w in msg_lower for w in ['corporate kurukshetra', 'kurukshetra', 'corporate video', 'corporate script']):
+            import re as _re
+            _is_shloka = bool(_re.search(r'chapter\s*\d+.*shloka\s*\d+|shloka\s*\d+.*chapter\s*\d+|gita\s*\d+[:\.\s]\d+|bg\s*\d+[:\.\s]\d+', msg_lower))
+            if _is_shloka or any(w in msg_lower for w in ['corporate kurukshetra', 'kurukshetra', 'corporate video', 'corporate script', 'battlefield', 'mahabharata script']):
                 content_type = 'corporate_kurukshetra'
             elif any(w in msg_lower for w in ['youtube', 'long form', 'long-form', 'yt video', 'full video']):
                 content_type = 'youtube'
@@ -1468,30 +1470,142 @@ Depth > frequency. Clarity > emotion. Insight > outrage."""
                 prompt = pkg_engine_prompt
 
             elif content_type == 'corporate_kurukshetra':
-                if topic == 'auto':
-                    topic_instruction = "Pick a relatable corporate life topic — office politics, work-life balance, promotions, managers, deadlines, corporate culture in India."
+                # ── CORPORATE KURUKSHETRA FULL SCRIPT ENGINE ──
+                import re as _re2
+
+                # Detect "Chapter X, Shloka Y" activation
+                shloka_match = _re2.search(
+                    r'chapter\s*(\d+)[,\s]*shloka\s*(\d+)|shloka\s*(\d+)[,\s]*chapter\s*(\d+)',
+                    msg_lower
+                )
+                if shloka_match:
+                    g = shloka_match.groups()
+                    ch = g[0] or g[3]
+                    sl = g[1] or g[2]
+                    shloka_ref = f"Bhagavad Gita Chapter {ch}, Shloka {sl}"
+                    topic_instruction = f"""ACTIVATION: {shloka_ref}
+Look up the actual Sanskrit shloka for {shloka_ref}.
+Build the entire script around the battlefield wisdom of this specific shloka.
+The shloka MUST appear in the script as the emotional highlight — full Sanskrit, no translation inside the shloka block."""
+                elif topic == 'auto':
+                    topic_instruction = """Pick a Bhagavad Gita shloka whose battlefield wisdom maps directly to a sharp corporate misjudgment.
+Choose one that reveals: ego, delusion, weak leadership, blind loyalty, collapse under pressure, or wrong judgement.
+State the Chapter and Shloka number clearly."""
                 else:
-                    topic_instruction = f"Topic: {topic}"
+                    topic_instruction = f"Topic/Shloka: {topic}\nMap this to a specific corporate battlefield truth."
 
-                prompt = f"""You are writing a script for Sudeep\'s "Corporate Kurukshetra" series — commentary on corporate life in India.
+                prompt = f"""You are the exclusive scriptwriter for "Corporate Kurukshetra" — a YouTube Shorts and Reels series on Sudeep's Phokat Ka Gyan channel, published Monday / Wednesday / Friday.
 
-CHANNEL STYLE:
-- Hindi/Hinglish, witty and relatable
-- Insider perspective — Sudeep works in a corporate job himself
-- Mix of humor + real talk about corporate reality
-- 60-90 seconds, punchy
-- Relatable moments that working professionals instantly connect with
+━━━ YOUR IDENTITY ━━━
+You are a warrior monk decoding battlefield psychology for corporate survival.
+NOT a teacher. NOT a preacher. NOT a newsreader. NOT a motivational coach.
+Your tone: Mahabharata battlefield strategy meets modern corporate warfare.
+Every line = a weapon strike.
 
+━━━ WHAT TO GENERATE ━━━
 {topic_instruction}
 {style_context}
 
-Write a complete script with:
-1. 🎣 HOOK (relatable corporate scenario in first 5 seconds)
-2. 😤 THE REALITY (what actually happens vs what they say — the corporate truth)
-3. 😂 THE PUNCHLINE/INSIGHT (the funny or sharp observation)
-4. 🔥 CTA (comment bait — "Aisa hua hai toh like karo")
+━━━ ABSOLUTE TONE RULES (ZERO FLEXIBILITY) ━━━
+✔ Hinglish only — short, punchy, aggressive
+✔ Maximum tension, minimal softness
+✔ Cinematic battlefield energy
+✔ Corporate truths delivered like weapon strikes
+✔ Bold, confrontational insights
 
-Include on-screen text suggestions and duration."""
+FORBIDDEN FOREVER:
+❌ "One should understand…" / "This teaches us…" / "It is important to remember…"
+❌ "Sometimes in life…" / "We all face challenges…"
+❌ Any soft motivational language
+❌ Boss / Bro / Yaar / Bhai / any social media slang
+❌ Humor, meme-like language, casual friendliness
+❌ Poetic intros / calm philosophical drift / corporate trainer vibe
+
+ALLOWED TONE MARKERS: war / ego / delusion / collapse / pressure / strategy / dominance / execution / clarity / failure / betrayal / misjudgment
+
+━━━ SCRIPT STRUCTURE ━━━
+
+**1️⃣ VIRAL REEL SCRIPT (30–60 sec)**
+
+Follow EXACTLY this sequence — no deviation:
+
+[HOOK — 0–3 sec]
+• Hinglish, aggressive
+• Attack one of: ego / delusion / overconfidence / blind loyalty / weak leadership / wrong judgement / chaos / collapse under pressure
+• Must sound like a battlefield WARNING — NOT casual talk
+• Must challenge/reverse a universal corporate assumption
+• Scroll-stopping — war-like stakes
+❌ No humor, poetic intros, calm starts, or friendly warnings
+✔ Example tone: "Agar tum team ko skills se judge karte ho… Duryodhan wali defeat likhi hai."
+
+[SETUP — Tension building]
+• Short lines, high conflict
+• Build emotional pressure — pre-war drumbeats feel
+
+[SHLOKA — Emotional highlight]
+• Full Sanskrit shloka only
+• No translation text inside this block
+• Delivered AFTER tension peaks
+
+[CALM EXPLANATION — Battlefield analysis, NOT soft]
+• Hinglish, short lines
+• Decode like an enemy strategy
+• No teaching tone, no long sentences
+
+[CORPORATE INSIGHT — Counterintuitive, Brutal]
+• Challenge a common corporate misconception
+• Aggressive, sharp, quotable
+• Feels like a slap of truth
+• ZERO generic motivational statements
+✔ Acceptable: "Skill bina discipline = dead weight." / "Leader apne delusion se haarta hai."
+
+[PUNCHLINE — Sword Strike]
+• ONE line only — short, sharp, unforgettable
+• Must sting — memorable enough to quote
+• No metaphors that take more than 1 second to process
+• Must feel like a death-blow in battle
+✔ "War execution se jeeti jaati hai." / "Confusion kills faster than the enemy." / "Loyalty bina competence = collapse."
+❌ Long or poetic punchlines
+
+[CTA — Cinematic, next battle is coming]
+• Short, direct
+• Example: "Agle shloka ka war-truth chahiye? Follow aur Kurukshetra mein enter karo."
+
+**2️⃣ TELEPROMPTER SCRIPT**
+• Same Hinglish tone
+• Very short sentences with natural pauses marked [pause]
+• Reads like a battlefield commander monologue
+• No corporate jargon, no textbook phrasing
+• Intensity NEVER softens
+
+**3️⃣ INSTAGRAM CAPTION**
+• Start with aggressive hook line
+• Summarize lesson in battlefield tone
+• One punchline
+• 15–20 hashtags from: #BhagavadGita #CorporateKurukshetra #Leadership #TeamManagement #OfficePolitics #Mahabharata #HinglishReels #CorporateLife #Execution #BattlefieldWisdom #GitaForCorporate #WorkplaceWarrior #Phokat kaGyan #CareerStrategy #IndianCorporate
+
+**4️⃣ YOUTUBE SHORTS CAPTION**
+• High-impact headline first
+• One sharp line summarizing the conflict
+• 8–10 hashtags, battlefield tone maintained
+
+━━━ MICRO-RULES (NON-NEGOTIABLE) ━━━
+1. Hook MUST attack a universal corporate flaw — not just describe it
+2. ZERO colloquial slang: no boss/bro/yaar/scene yeh hai/LOL — breaks battlefield immersion
+3. Punchlines = one-line daggers only (short, surgical, quotable)
+4. Every script must have: Problem → Cause → Conclusion (AI-legible even in aggressive Hinglish)
+5. Series identity check: Does this reinforce "Phokat Ka Gyan = critical thinking for Indians questioning untouchable systems"? If generic → sharpen.
+6. Quality gate: Will this trigger discussion (not just agreement)? Worth defending in comments? If it only validates frustration → kill it.
+
+━━━ UNIVERSAL ALIGNMENT ━━━
+• Message-first: within 20 seconds, state what belief/assumption is being challenged
+• Problem match: state it exactly as the viewer feels it — "haan exactly yahi problem hai" test
+• Mega-mean-mouse: reveal hidden cost → blame system/myth → expose failed solution → one mental shift
+• Personality not ranting: what NEW lens are you adding? No recycled outrage.
+
+━━━ FINAL RULE ━━━
+Depth > frequency. Clarity > emotion. Insight > outrage.
+Corporate Kurukshetra → one strategic misjudgment revealed per script."""
 
             elif content_type == 'youtube':
                 if topic == 'auto':
@@ -1554,8 +1668,8 @@ Format as a solo debate (Sudeep presents BOTH sides, then gives his verdict):
 
 Hindi/Hinglish. Punchy. No fence-sitting in the verdict."""
 
-            # Generate the content — PKG scripts need more tokens for full output format
-            max_tok = 3000 if content_type == 'phokat_short' else 2000
+            # Both PKG and Corporate Kurukshetra need full 4-format output
+            max_tok = 3000 if content_type in ('phokat_short', 'corporate_kurukshetra') else 2000
             generated = ask_groq([{'role': 'user', 'content': prompt}], max_tokens=max_tok)
 
             # Save to Firestore for reference
@@ -1577,7 +1691,7 @@ Hindi/Hinglish. Punchy. No fence-sitting in the verdict."""
 
             type_labels = {
                 'phokat_short': '🎬 Phokat Ka Gyan — Daily Awareness Script',
-                'corporate_kurukshetra': '💼 Corporate Kurukshetra',
+                'corporate_kurukshetra': '⚔️ Corporate Kurukshetra — Battlefield Script',
                 'youtube': '📹 YouTube Long-form',
                 'instagram': '📸 Instagram',
                 'debate': '⚔️ Sunday Debate',
@@ -1585,6 +1699,7 @@ Hindi/Hinglish. Punchy. No fence-sitting in the verdict."""
             label = type_labels.get(content_type, '📝 Content')
             footer = {
                 'phokat_short': "Saved to content library.\nTell me: hook change? different angle? tone too calm? want a second take?",
+                'corporate_kurukshetra': "Saved to content library.\nTell me: hook too soft? punchline weak? different shloka? want another take — no mercy.",
             }.get(content_type, "Saved to your content library. Tell me if you want to change the hook, adjust the tone, or try a different angle.")
             reply = f"{label}\n\n{generated}\n\n---\n{footer}"
             return reply, 'content_agent', {'content_type': content_type, 'topic': topic}

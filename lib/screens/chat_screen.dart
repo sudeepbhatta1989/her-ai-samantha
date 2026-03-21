@@ -871,7 +871,8 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
             child: Row(children: [
-              _buildChip('📹 Reel Script', 'Write a 60-second reel script about '),
+              _buildChip('📹 PKG Script', 'Create a Phokat Ka Gyan awareness script for today'),
+              _buildChip('⚔️ Kurukshetra', 'Corporate Kurukshetra script — Chapter '),
               _buildChip('💡 Video Ideas', 'Give me 5 unique Phokat Ka Gyan video ideas about '),
               _buildChip('📝 Long Video', 'Help me plan a detailed YouTube video on '),
               _buildChip('🔍 Research', 'Research this topic and give me key facts for a video: '),
