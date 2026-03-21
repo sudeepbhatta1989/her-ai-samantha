@@ -151,10 +151,43 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   Future<void> _speak(String text) async {
     if (_isMuted || text.isEmpty) return;
     setState(() => _isSpeaking = true);
-    if (GOOGLE_TTS_KEY != 'YOUR_GOOGLE_TTS_API_KEY_HERE') {
-      await _speakGoogleTTS(text);
-    } else {
+    // Try custom Samantha voice first (XTTS v2, no external API)
+    final success = await _speakSamanthaVoice(text);
+    if (!success) {
+      // Fallback to flutter_tts (device voice)
       await _flutterTts.speak(text);
+    }
+  }
+
+  Future<bool> _speakSamanthaVoice(String text) async {
+    try {
+      // Trim long responses for TTS (speak first ~280 chars)
+      final ttsText = text.length > 280
+          ? '${text.substring(0, text.lastIndexOf(' ', 280))}...'
+          : text;
+
+      final response = await http.post(
+        Uri.parse(LAMBDA_URL),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'userId': USER_ID,
+          'action': 'tts',
+          'text': ttsText,
+          'lang': 'en',
+        }),
+      ).timeout(const Duration(seconds: 35));
+
+      if (response.statusCode != 200) return false;
+      final data = jsonDecode(response.body);
+      final audioB64 = data['audio_b64'] as String?;
+      if (audioB64 == null || audioB64.isEmpty) return false;
+
+      final audioBytes = base64Decode(audioB64);
+      await _playAudioBytes(audioBytes);
+      return true;
+    } catch (e) {
+      debugPrint('[Samantha TTS] Custom voice failed: $e');
+      return false;
     }
   }
 
