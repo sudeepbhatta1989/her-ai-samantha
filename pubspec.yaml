@@ -31,11 +31,8 @@ dependencies:
   just_audio: ^0.9.40
   path_provider: ^2.1.0
 
-  # State management for ScheduleProvider
-  provider: ^6.1.0
-
-  # Calendar access (iOS/Android)
-  device_calendar: ^4.3.0
+  # Document upload for Q&A
+  file_picker: ^8.0.0
 
   cupertino_icons: ^1.0.8
 

@@ -7,6 +7,7 @@ import 'dart:io';
 import 'dart:math' as math;
 import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:file_picker/file_picker.dart';
 
 const String LAMBDA_URL =
     'https://aybg83gr69.execute-api.ap-south-1.amazonaws.com/prod/chat';
@@ -39,6 +40,10 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   bool _isOrbMode = false;
   String _liveText = '';
   double _micLevel = 0.0;
+
+  // Document Q&A
+  String? _attachedDocText;
+  String? _attachedDocName;
 
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
@@ -119,8 +124,25 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
 
   Future<void> _initTts() async {
     await _flutterTts.setLanguage('en-IN');
-    await _flutterTts.setSpeechRate(0.52);
-    await _flutterTts.setPitch(1.05);
+    // Try to pick the enhanced Indian English female voice (Lekha on iOS)
+    try {
+      final voices = await _flutterTts.getVoices as List?;
+      if (voices != null) {
+        final indianFemale = voices.firstWhere(
+          (v) => v is Map &&
+              (v['locale']?.toString().contains('IN') ?? false) &&
+              (v['gender']?.toString().toLowerCase() == 'female' ||
+               v['name']?.toString().toLowerCase().contains('lekha') == true ||
+               v['name']?.toString().toLowerCase().contains('female') == true),
+          orElse: () => null,
+        );
+        if (indianFemale != null) {
+          await _flutterTts.setVoice(Map<String, String>.from(indianFemale as Map));
+        }
+      }
+    } catch (_) {}
+    await _flutterTts.setSpeechRate(0.48);   // slightly slower = more natural
+    await _flutterTts.setPitch(1.12);         // slightly higher = more feminine
     await _flutterTts.setVolume(1.0);
     _flutterTts.setStartHandler(() => setState(() => _isSpeaking = true));
     _flutterTts.setCompletionHandler(() => setState(() => _isSpeaking = false));
@@ -232,15 +254,27 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     _scrollToBottom();
     _thinkController.repeat();
 
+    // If doc attached, add it to this message and clear after sending
+    final docText = _attachedDocText;
+    final docName = _attachedDocName;
+    if (docText != null) {
+      setState(() { _attachedDocText = null; _attachedDocName = null; });
+    }
+
     try {
+      final payload = <String, dynamic>{
+        'userId': USER_ID,
+        'message': text,
+        'session_id': _sessionId,
+      };
+      if (docText != null) {
+        payload['doc_content'] = docText;
+        payload['doc_name'] = docName ?? 'document';
+      }
       final response = await http.post(
         Uri.parse(LAMBDA_URL),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'userId': USER_ID,
-          'message': text,
-          'session_id': _sessionId,
-        }),
+        body: jsonEncode(payload),
       ).timeout(const Duration(seconds: 30));
 
       final data = jsonDecode(response.body);
@@ -314,6 +348,43 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   }
 
   void _toggleOrbMode() => setState(() => _isOrbMode = !_isOrbMode);
+
+  Future<void> _pickDocument() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['txt', 'md', 'pdf', 'doc', 'docx', 'csv', 'json'],
+        withData: true,
+      );
+      if (result == null || result.files.isEmpty) return;
+      final file = result.files.first;
+      String content = '';
+      if (file.bytes != null) {
+        content = String.fromCharCodes(file.bytes!.where((b) => b >= 32 || b == 10 || b == 13));
+      } else if (file.path != null) {
+        content = await File(file.path!).readAsString();
+      }
+      // Trim to 8000 chars to fit Lambda context
+      if (content.length > 8000) content = content.substring(0, 8000) + '... [truncated]';
+      setState(() {
+        _attachedDocText = content;
+        _attachedDocName = file.name;
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not read file: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  void _applyChip(String prompt) {
+    _textController.text = prompt;
+    _textController.selection = TextSelection.fromPosition(
+      TextPosition(offset: prompt.length),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -758,6 +829,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
               },
             ),
           ),
+          // Live voice transcript
           if (_liveText.isNotEmpty)
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -770,14 +842,79 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
               child: Text(_liveText,
                   style: const TextStyle(color: Color(0xFF00D4FF), fontSize: 13)),
             ),
+
+          // Attached doc indicator
+          if (_attachedDocName != null)
+            Container(
+              margin: const EdgeInsets.fromLTRB(12, 4, 12, 0),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF59E0B).withOpacity(0.12),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFF59E0B).withOpacity(0.4)),
+              ),
+              child: Row(children: [
+                const Icon(Icons.attach_file, color: Color(0xFFF59E0B), size: 14),
+                const SizedBox(width: 6),
+                Expanded(child: Text(_attachedDocName!,
+                    style: const TextStyle(color: Color(0xFFF59E0B), fontSize: 12),
+                    overflow: TextOverflow.ellipsis)),
+                GestureDetector(
+                  onTap: () => setState(() { _attachedDocText = null; _attachedDocName = null; }),
+                  child: const Icon(Icons.close, color: Color(0xFFF59E0B), size: 14),
+                ),
+              ]),
+            ),
+
+          // Quick-action chips
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+            child: Row(children: [
+              _buildChip('📹 Reel Script', 'Write a 60-second reel script about '),
+              _buildChip('💡 Video Ideas', 'Give me 5 unique Phokat Ka Gyan video ideas about '),
+              _buildChip('📝 Long Video', 'Help me plan a detailed YouTube video on '),
+              _buildChip('🔍 Research', 'Research this topic and give me key facts for a video: '),
+              _buildChip('🌐 Web Search', 'Search the web for latest news about '),
+              _buildChip('📖 Doc Q&A', 'Based on the document I uploaded, answer: '),
+              _buildChip('🎯 Hook Line', 'Write 5 powerful hook lines for a video about '),
+              _buildChip('📊 Analyse', 'Analyse my week and suggest improvements'),
+            ]),
+          ),
+
+          // Input bar
           Container(
-            padding: const EdgeInsets.fromLTRB(12, 10, 12, 28),
+            padding: const EdgeInsets.fromLTRB(12, 6, 12, 28),
             decoration: const BoxDecoration(
               color: Color(0xFF13131A),
               border: Border(top: BorderSide(color: Color(0xFF2A2A3A))),
             ),
             child: Row(
               children: [
+                // Attachment button
+                GestureDetector(
+                  onTap: _pickDocument,
+                  child: Container(
+                    width: 40, height: 40,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _attachedDocName != null
+                          ? const Color(0xFFF59E0B).withOpacity(0.2)
+                          : const Color(0xFF1A1A24),
+                      border: Border.all(
+                        color: _attachedDocName != null
+                            ? const Color(0xFFF59E0B)
+                            : const Color(0xFF2A2A3A),
+                      ),
+                    ),
+                    child: Icon(Icons.attach_file,
+                        color: _attachedDocName != null
+                            ? const Color(0xFFF59E0B)
+                            : const Color(0xFF7A7590),
+                        size: 18),
+                  ),
+                ),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Container(
                     decoration: BoxDecoration(
@@ -788,8 +925,10 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                     child: TextField(
                       controller: _textController,
                       style: const TextStyle(fontSize: 14),
+                      maxLines: 3,
+                      minLines: 1,
                       decoration: const InputDecoration(
-                        hintText: 'Type or speak to Samantha...',
+                        hintText: 'Ask anything — research, scripts, plans...',
                         hintStyle: TextStyle(color: Color(0xFF7A7590), fontSize: 13),
                         border: InputBorder.none,
                         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -838,6 +977,23 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildChip(String label, String prompt) {
+    return GestureDetector(
+      onTap: () => _applyChip(prompt),
+      child: Container(
+        margin: const EdgeInsets.only(right: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: const Color(0xFF16161F),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFF2A2A3A)),
+        ),
+        child: Text(label,
+            style: const TextStyle(fontSize: 12, color: Color(0xFFB0B0C8))),
       ),
     );
   }

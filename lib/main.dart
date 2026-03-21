@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:provider/provider.dart';
 import 'screens/splash_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/chat_screen.dart';
 import 'screens/plan_screen.dart';
-import 'screens/schedule_screen.dart';
-import 'screens/history_screen.dart';
-import 'screens/jarvis_screen.dart';
+import 'screens/insights_screen.dart';
 import 'services/notification_service.dart';
-import 'providers/schedule_provider.dart';
 
 // Global navigator key so NotificationService can route without BuildContext
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -41,12 +37,7 @@ void main() async {
     debugPrint('[Samantha] NotificationService init failed: $e');
   }
 
-  runApp(
-    ChangeNotifierProvider(
-      create: (_) => ScheduleProvider(),
-      child: const HerAIApp(),
-    ),
-  );
+  runApp(const HerAIApp());
 }
 
 class HerAIApp extends StatelessWidget {
@@ -103,9 +94,7 @@ class MainShellState extends State<MainShell> {
     const HomeScreen(),
     const ChatScreen(),
     PlanScreen(key: _planKey),
-    const ScheduleScreen(),
-    const JarvisScreen(),
-    const HistoryScreen(),
+    const InsightsScreen(),
   ];
 
   /// Called by NotificationService to switch to a specific tab
@@ -135,9 +124,9 @@ class MainShellState extends State<MainShell> {
             label: 'Home',
           ),
           NavigationDestination(
-            icon: Icon(Icons.mic_none_rounded),
-            selectedIcon: Icon(Icons.mic_rounded),
-            label: 'Talk',
+            icon: Icon(Icons.chat_bubble_outline_rounded),
+            selectedIcon: Icon(Icons.chat_bubble_rounded),
+            label: 'Chat',
           ),
           NavigationDestination(
             icon: Icon(Icons.calendar_today_outlined),
@@ -145,19 +134,9 @@ class MainShellState extends State<MainShell> {
             label: 'Plan',
           ),
           NavigationDestination(
-            icon: Icon(Icons.calendar_month_outlined),
-            selectedIcon: Icon(Icons.calendar_month),
-            label: 'Schedule',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.bolt_outlined),
-            selectedIcon: Icon(Icons.bolt),
-            label: 'Jarvis',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.history_outlined),
-            selectedIcon: Icon(Icons.history),
-            label: 'History',
+            icon: Icon(Icons.auto_graph_outlined),
+            selectedIcon: Icon(Icons.auto_graph),
+            label: 'Insights',
           ),
         ],
       ),

@@ -2812,6 +2812,75 @@ def lambda_handler(event, context):
             except Exception as e:
                 return _response({'error': str(e), 'status': 'error'}, 500)
 
+        # ── Import ChatGPT conversation history ──
+        if action == 'import_chatgpt':
+            try:
+                import datetime as _dt_cg
+                chatgpt_data = body.get('chatgpt_data', '')
+                if not chatgpt_data:
+                    return _response({'error': 'No chatgpt_data provided'}, 400)
+                # Parse ChatGPT export format
+                try:
+                    conversations = json.loads(chatgpt_data)
+                    if not isinstance(conversations, list):
+                        conversations = [conversations]
+                except Exception:
+                    return _response({'error': 'Invalid JSON in chatgpt_data'}, 400)
+                imported = 0
+                batch_ref = db.collection(f'users/{user_id}/chatgpt_imports')
+                for conv in conversations[:200]:  # limit to 200 conversations
+                    try:
+                        title = conv.get('title', 'Imported conversation')
+                        create_time = conv.get('create_time', 0)
+                        mapping = conv.get('mapping', {})
+                        messages_out = []
+                        for node in mapping.values():
+                            msg = node.get('message')
+                            if not msg:
+                                continue
+                            role = msg.get('author', {}).get('role', '')
+                            if role not in ('user', 'assistant'):
+                                continue
+                            parts = msg.get('content', {}).get('parts', [])
+                            text = ' '.join(str(p) for p in parts if isinstance(p, str)).strip()
+                            if text:
+                                messages_out.append({'role': role, 'text': text})
+                        if messages_out:
+                            ts = _dt_cg.datetime.utcfromtimestamp(create_time).isoformat() if create_time else _dt_cg.datetime.utcnow().isoformat()
+                            batch_ref.add({
+                                'title': title,
+                                'timestamp': ts,
+                                'messages': messages_out[:50],  # keep first 50 messages per conv
+                                'source': 'chatgpt_import',
+                            })
+                            imported += 1
+                    except Exception:
+                        continue
+                # Save a summary memory about the import
+                if db is not None and imported > 0:
+                    db.document(f'users/{user_id}/memories/chatgpt_import').set({
+                        'content': f'User imported {imported} conversations from ChatGPT on {_dt_cg.date.today().isoformat()}. These contain Sudeep\'s previous thinking, research and plans.',
+                        'type': 'context',
+                        'importance': 9,
+                        'timestamp': _dt_cg.datetime.utcnow().isoformat(),
+                    })
+                return _response({'imported_count': imported, 'status': 'ok'})
+            except Exception as e:
+                return _response({'error': str(e), 'status': 'error'}, 500)
+
+        # ── Document Q&A (get_cached_briefing re-use) ──
+        if action == 'get_cached_briefing':
+            try:
+                import datetime as _dt_b
+                date_str = body.get('date', _dt_b.date.today().isoformat())
+                briefing_ref = db.document(f'users/{user_id}/briefings/{date_str}') if db else None
+                briefing_doc = briefing_ref.get() if briefing_ref else None
+                if briefing_doc and briefing_doc.exists:
+                    return _response({'briefing': briefing_doc.to_dict(), 'status': 'ok'})
+                return _response({'briefing': None, 'status': 'miss'})
+            except Exception as e:
+                return _response({'briefing': None, 'status': 'error', 'error': str(e)})
+
         # ── Main chat ──
         if not user_message:
             return _response({'error': 'No message provided'}, 400)
@@ -2869,6 +2938,17 @@ def lambda_handler(event, context):
         for conv in recent_convs[-3:]:
             messages.append({'role': 'user', 'content': conv.get('userMessage', '')})
             messages.append({'role': 'assistant', 'content': conv.get('aiReply', '')})
+
+        # ── Document Q&A: inject doc content into user message ──
+        doc_content = body.get('doc_content', '')
+        doc_name = body.get('doc_name', 'document')
+        if doc_content:
+            user_message = f"""[Document attached: {doc_name}]
+
+{doc_content[:6000]}
+
+---
+User question: {user_message}"""
 
         # ── Reschedule intent: regenerate plan with current time ──
         if needs_reschedule(user_message):
