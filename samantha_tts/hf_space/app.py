@@ -1,67 +1,64 @@
 """
 Samantha Voice — HuggingFace Space
-Coqui XTTS v2 voice cloning using samantha_reference.wav
+Microsoft Edge TTS: en-IN-NeerjaNeural (Indian English) + hi-IN-SwaraNeural (Hindi)
+No API key. No model download. Instant startup.
+
+Endpoints:
+  POST /tts    {"text": "...", "lang": "en|hi"}  → MP3 audio bytes
+  GET  /health → {"status": "ready"}
+  GET  /       → Gradio UI
 """
 
-import os, hashlib, time
+import os, io, asyncio, hashlib, time
 from pathlib import Path
+import edge_tts
 
-os.environ['COQUI_TOS_AGREED'] = '1'
-
-REFERENCE = Path(__file__).parent / 'samantha_reference.wav'
 CACHE_DIR = Path('/tmp/samantha_cache')
 CACHE_DIR.mkdir(exist_ok=True)
 
-# ── Patch gradio_client bug: schema can be bool, not always dict ──
-# Bug: gradio_client/utils.py line 863 does `if "const" in schema`
-# which crashes when schema is a bool. Fixed in gradio 4.44.1+ but
-# HF pins 4.44.0. Patch the internal function before gradio loads.
-try:
-    import gradio_client.utils as _gcu
-    _orig_json_schema = _gcu._json_schema_to_python_type
-    def _safe_json_schema(schema, defs=None):
-        if not isinstance(schema, dict):
-            return 'Any'
-        return _orig_json_schema(schema, defs)
-    _gcu._json_schema_to_python_type = _safe_json_schema
-    print('[Samantha] Patched gradio_client schema bug.')
-except Exception as _e:
-    print(f'[Samantha] gradio_client patch skipped: {_e}')
+VOICES = {
+    'en': 'en-IN-NeerjaNeural',   # Indian English female
+    'hi': 'hi-IN-SwaraNeural',    # Hindi female, fluent
+}
 
-# ── Load XTTS v2 ──
-print('[Samantha] Loading XTTS v2...')
-from TTS.api import TTS
-tts = TTS('tts_models/multilingual/multi-dataset/xtts_v2')
-print('[Samantha] Model ready.')
+print('[Samantha] Edge TTS ready — en-IN-NeerjaNeural / hi-IN-SwaraNeural')
 
 
 def _cache_path(text: str, lang: str) -> Path:
     key = hashlib.md5(f'{text}:{lang}'.encode()).hexdigest()
-    return CACHE_DIR / f'{key}.wav'
+    return CACHE_DIR / f'{key}.mp3'
+
+
+async def _generate(text: str, voice: str) -> bytes:
+    communicate = edge_tts.Communicate(text, voice)
+    buf = io.BytesIO()
+    async for chunk in communicate.stream():
+        if chunk['type'] == 'audio':
+            buf.write(chunk['data'])
+    return buf.getvalue()
 
 
 def generate_speech(text: str, language: str = 'en') -> bytes:
-    text = text.strip()[:200]
+    text = text.strip()[:300]
     if not text:
         return None
+    voice = VOICES.get(language, VOICES['en'])
     cache = _cache_path(text, language)
     if cache.exists():
         print(f'[Samantha] Cache hit: {text[:40]}')
         return cache.read_bytes()
     start = time.time()
-    tts.tts_to_file(
-        text=text,
-        speaker_wav=str(REFERENCE),
-        language=language,
-        file_path=str(cache),
-    )
-    print(f'[Samantha] Generated in {round(time.time()-start, 1)}s')
-    return cache.read_bytes()
+    audio = asyncio.run(_generate(text, voice))
+    print(f'[Samantha] {voice} generated {len(audio)}B in {round(time.time()-start,1)}s')
+    if audio:
+        cache.write_bytes(audio)
+    return audio
 
 
-# ── FastAPI endpoints (what Lambda calls) ──
+# ── FastAPI endpoints ──
 from fastapi import FastAPI, Request
 from fastapi.responses import Response, JSONResponse
+import gradio as gr
 
 api = FastAPI()
 
@@ -75,34 +72,33 @@ async def tts_endpoint(request: Request):
     try:
         audio = generate_speech(text, lang)
         if audio:
-            return Response(content=audio, media_type='audio/wav')
+            return Response(content=audio, media_type='audio/mpeg')
         return JSONResponse({'error': 'generation failed'}, status_code=500)
     except Exception as e:
-        print(f'[Samantha] /tts error: {e}')
         return JSONResponse({'error': str(e)}, status_code=500)
 
 @api.get('/health')
 def health():
-    return {'status': 'ready', 'model': 'xtts_v2'}
+    return {'status': 'ready', 'voices': list(VOICES.values())}
 
 
 # ── Gradio UI ──
-import gradio as gr
-
-def synthesize(text: str) -> str:
-    audio = generate_speech(text, 'en')
+def synthesize(text: str, language: str) -> str:
+    audio = generate_speech(text, language)
     if not audio:
         return None
-    out = CACHE_DIR / f'ui_{hashlib.md5(text.encode()).hexdigest()}.wav'
+    out = CACHE_DIR / f'ui_{hashlib.md5(text.encode()).hexdigest()}.mp3'
     out.write_bytes(audio)
     return str(out)
 
 with gr.Blocks(title='Samantha Voice') as demo:
-    gr.Markdown('## 🎙️ Samantha Voice — XTTS v2')
-    text_in   = gr.Textbox(label='Text', lines=3, placeholder='Type what Samantha should say...')
-    audio_out = gr.Audio(label='Samantha Voice')
+    gr.Markdown('## 🎙️ Samantha Voice\n**en-IN-NeerjaNeural** (Indian English) · **hi-IN-SwaraNeural** (Hindi)')
+    with gr.Row():
+        text_in = gr.Textbox(label='Text', lines=3, placeholder='Type in English or Hindi...')
+        lang_in = gr.Radio(['en', 'hi'], value='en', label='Language')
+    audio_out = gr.Audio(label='Output', type='filepath')
     gr.Button('Generate', variant='primary').click(
-        fn=synthesize, inputs=[text_in], outputs=[audio_out]
+        fn=synthesize, inputs=[text_in, lang_in], outputs=[audio_out]
     )
 
 app = gr.mount_gradio_app(api, demo, path='/')

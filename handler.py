@@ -3039,57 +3039,50 @@ def lambda_handler(event, context):
             except Exception as e:
                 return _response({'error': str(e), 'status': 'error'}, 500)
 
-        # ── Custom TTS: Samantha Voice (XTTS v2, no external API) ──
+        # ── Samantha TTS: edge-tts (Indian English + Hindi, no API key) ──
         if action == 'tts':
             try:
-                import base64, hashlib as _hs, urllib.request as _ur
-                text = body.get('text', '').strip()[:500]
+                import asyncio, io, base64, hashlib as _hs
+                import edge_tts as _etts
+
+                text = body.get('text', '').strip()[:300]
                 lang = body.get('lang', 'en')
                 if not text:
                     return _response({'error': 'text required'}, 400)
 
-                # Cache key — check Firebase Storage first
-                cache_key = _hs.md5(f'{text}:{lang}'.encode()).hexdigest()
-                audio_b64 = None
+                # Indian voices — female, natural accent
+                _VOICES = {
+                    'en': 'en-IN-NeerjaNeural',   # Indian English female
+                    'hi': 'hi-IN-SwaraNeural',    # Hindi female, fluent
+                }
+                voice = _VOICES.get(lang, _VOICES['en'])
 
-                # Try Firestore cache
+                # Firestore cache check
+                cache_key = _hs.md5(f'{text}:{lang}'.encode()).hexdigest()
                 if db is not None:
                     try:
                         cached = db.document(f'tts_cache/{cache_key}').get()
                         if cached.exists:
-                            return _response({'audio_b64': cached.to_dict().get('audio_b64', ''), 'cached': True})
+                            return _response({'audio_b64': cached.to_dict().get('audio_b64', ''), 'cached': True, 'voice': voice})
                     except Exception:
                         pass
 
-                # Try local TTS server first (fast)
-                def _call_tts(base_url):
-                    resp = requests.post(
-                        f'{base_url.rstrip("/")}/tts',
-                        json={'text': text, 'lang': lang},
-                        timeout=60,
-                        stream=True,
-                    )
-                    if resp.status_code == 200:
-                        return base64.b64encode(resp.content).decode('utf-8')
-                    return None
+                # Generate via edge-tts (Microsoft Neural TTS, free)
+                async def _generate():
+                    communicate = _etts.Communicate(text, voice)
+                    buf = io.BytesIO()
+                    async for chunk in communicate.stream():
+                        if chunk['type'] == 'audio':
+                            buf.write(chunk['data'])
+                    return buf.getvalue()
 
-                if SAMANTHA_TTS_LOCAL:
-                    try:
-                        audio_b64 = _call_tts(SAMANTHA_TTS_LOCAL)
-                    except Exception:
-                        audio_b64 = None
+                audio = asyncio.run(_generate())
+                if not audio:
+                    return _response({'error': 'TTS generation failed'}, 500)
 
-                # Fallback: HuggingFace Space
-                if not audio_b64 and SAMANTHA_TTS_HF:
-                    try:
-                        audio_b64 = _call_tts(SAMANTHA_TTS_HF)
-                    except Exception:
-                        audio_b64 = None
+                audio_b64 = base64.b64encode(audio).decode('utf-8')
 
-                if not audio_b64:
-                    return _response({'error': 'TTS servers unavailable. Start samantha_tts_server.py on your PC or deploy HuggingFace Space.'}, 503)
-
-                # Cache in Firestore (max 24h TTL handled by client)
+                # Cache in Firestore
                 if db is not None:
                     try:
                         import datetime as _dt_tts
@@ -3097,12 +3090,13 @@ def lambda_handler(event, context):
                             'audio_b64': audio_b64,
                             'text': text[:100],
                             'lang': lang,
+                            'voice': voice,
                             'created_at': _dt_tts.datetime.utcnow().isoformat(),
                         })
                     except Exception:
                         pass
 
-                return _response({'audio_b64': audio_b64, 'cached': False})
+                return _response({'audio_b64': audio_b64, 'cached': False, 'voice': voice})
 
             except Exception as e:
                 return _response({'error': str(e)}, 500)

@@ -159,12 +159,21 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     }
   }
 
+  /// Detect if text is primarily Hindi (Devanagari script)
+  String _detectLang(String text) {
+    final devanagari = RegExp(r'[\u0900-\u097F]');
+    final hindiChars = devanagari.allMatches(text).length;
+    return hindiChars > text.length * 0.2 ? 'hi' : 'en';
+  }
+
   Future<bool> _speakSamanthaVoice(String text) async {
     try {
-      // Trim long responses for TTS (speak first ~280 chars)
+      // Trim long responses — edge-tts is fast but keep it snappy
       final ttsText = text.length > 280
           ? '${text.substring(0, text.lastIndexOf(' ', 280))}...'
           : text;
+
+      final lang = _detectLang(ttsText);
 
       final response = await http.post(
         Uri.parse(LAMBDA_URL),
@@ -173,9 +182,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           'userId': USER_ID,
           'action': 'tts',
           'text': ttsText,
-          'lang': 'en',
+          'lang': lang,  // 'en' → en-IN-NeerjaNeural, 'hi' → hi-IN-SwaraNeural
         }),
-      ).timeout(const Duration(seconds: 35));
+      ).timeout(const Duration(seconds: 20));  // edge-tts is fast, 20s is plenty
 
       if (response.statusCode != 200) return false;
       final data = jsonDecode(response.body);
