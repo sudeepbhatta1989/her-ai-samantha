@@ -1,14 +1,17 @@
 """
 Samantha Custom TTS Server
-Runs locally on Windows PC using Coqui XTTS v2 voice cloning.
+Runs locally on Windows PC using XTTS v2 voice cloning.
 Uses samantha_reference.wav as the voice character — no external API needed.
+
+Primary: Coqui TTS (XTTS v2) — best quality, voice cloning
+Fallback: pyttsx3 (system TTS) — if Coqui not installed
 
 Start: python samantha_tts_server.py
 Port: 8765
 """
 
 from flask import Flask, request, jsonify, send_file
-import torch, os, io, hashlib, time, threading
+import os, io, hashlib, time, threading
 from pathlib import Path
 
 app = Flask(__name__)
@@ -19,22 +22,52 @@ REFERENCE_WAV = BASE_DIR / 'samantha_reference.wav'
 CACHE_DIR = BASE_DIR / 'audio_cache'
 CACHE_DIR.mkdir(exist_ok=True)
 
-# ── Model (loaded once at startup) ──
+# ── Backend detection ──
+TTS_BACKEND = None   # 'coqui' | 'pyttsx3'
 tts_model = None
 model_lock = threading.Lock()
 MODEL_LOADING = False
 
+
 def load_model():
-    global tts_model, MODEL_LOADING
+    global tts_model, TTS_BACKEND, MODEL_LOADING
     MODEL_LOADING = True
-    print('[Samantha TTS] Loading XTTS v2 model...')
+
+    # ── Try Coqui XTTS v2 ──
     try:
+        import torch
         from TTS.api import TTS
+        print('[Samantha TTS] Loading XTTS v2 model... (first run downloads ~1.8 GB)')
         tts_model = TTS('tts_models/multilingual/multi-dataset/xtts_v2')
-        print('[Samantha TTS] Model ready.')
+        TTS_BACKEND = 'coqui'
+        cuda = torch.cuda.is_available()
+        print(f'[Samantha TTS] XTTS v2 ready. CUDA: {cuda}')
+        MODEL_LOADING = False
+        return
+    except ImportError:
+        print('[Samantha TTS] Coqui TTS not installed.')
     except Exception as e:
-        print(f'[Samantha TTS] Model load failed: {e}')
-        print('[Samantha TTS] Run: pip install TTS')
+        print(f'[Samantha TTS] Coqui TTS failed: {e}')
+
+    # ── Fallback: pyttsx3 ──
+    try:
+        import pyttsx3
+        engine = pyttsx3.init()
+        # Try to use a female voice
+        voices = engine.getProperty('voices')
+        for v in voices:
+            if 'zira' in v.name.lower() or 'female' in v.name.lower():
+                engine.setProperty('voice', v.id)
+                break
+        engine.setProperty('rate', 155)
+        engine.setProperty('volume', 0.95)
+        tts_model = engine
+        TTS_BACKEND = 'pyttsx3'
+        print('[Samantha TTS] Using pyttsx3 fallback TTS.')
+    except Exception as e:
+        print(f'[Samantha TTS] pyttsx3 also failed: {e}')
+        print('[Samantha TTS] Install Coqui TTS: pip install TTS --prefer-binary')
+
     MODEL_LOADING = False
 
 
@@ -43,17 +76,12 @@ def get_cache_path(text: str, lang: str) -> Path:
     return CACHE_DIR / f'{key}.wav'
 
 
-def synthesize(text: str, lang: str = 'en') -> bytes:
-    """Synthesize text using XTTS v2 with Samantha reference voice."""
+def synthesize_coqui(text: str, lang: str) -> bytes:
     cache_path = get_cache_path(text, lang)
     if cache_path.exists():
-        with open(cache_path, 'rb') as f:
-            return f.read()
+        return cache_path.read_bytes()
 
     with model_lock:
-        if tts_model is None:
-            raise RuntimeError('Model not loaded yet. Retry in a moment.')
-
         output_path = CACHE_DIR / f'tmp_{int(time.time()*1000)}.wav'
         tts_model.tts_to_file(
             text=text,
@@ -61,20 +89,43 @@ def synthesize(text: str, lang: str = 'en') -> bytes:
             language=lang,
             file_path=str(output_path),
         )
-
-        # Rename to cache
         output_path.rename(cache_path)
-        with open(cache_path, 'rb') as f:
-            return f.read()
+        return cache_path.read_bytes()
+
+
+def synthesize_pyttsx3(text: str) -> bytes:
+    cache_path = get_cache_path(text, 'sys')
+    if cache_path.exists():
+        return cache_path.read_bytes()
+
+    with model_lock:
+        tmp = str(CACHE_DIR / f'tmp_{int(time.time()*1000)}.wav')
+        tts_model.save_to_file(text, tmp)
+        tts_model.runAndWait()
+        import shutil
+        shutil.move(tmp, str(cache_path))
+        return cache_path.read_bytes()
+
+
+def synthesize(text: str, lang: str = 'en') -> bytes:
+    if tts_model is None:
+        raise RuntimeError('Model not loaded yet. Retry in a moment.')
+    if TTS_BACKEND == 'coqui':
+        return synthesize_coqui(text, lang)
+    elif TTS_BACKEND == 'pyttsx3':
+        return synthesize_pyttsx3(text)
+    raise RuntimeError('No TTS backend available.')
 
 
 # ── Routes ──
 
 @app.route('/health')
 def health():
+    status = 'ready' if tts_model is not None else ('loading' if MODEL_LOADING else 'unavailable')
     return jsonify({
-        'status': 'ready' if tts_model is not None else ('loading' if MODEL_LOADING else 'error'),
-        'model': 'xtts_v2',
+        'status': status,
+        'backend': TTS_BACKEND or 'none',
+        'model': 'xtts_v2' if TTS_BACKEND == 'coqui' else TTS_BACKEND,
         'reference': str(REFERENCE_WAV),
         'cache_size': len(list(CACHE_DIR.glob('*.wav'))),
     })
@@ -88,14 +139,12 @@ def tts():
 
     if not text:
         return jsonify({'error': 'text is required'}), 400
-    if len(text) > 500:
-        text = text[:500]   # XTTS v2 handles ~500 chars well
+    text = text[:500]
 
     try:
         start = time.time()
         audio_bytes = synthesize(text, lang)
         elapsed = round(time.time() - start, 2)
-
         return send_file(
             io.BytesIO(audio_bytes),
             mimetype='audio/wav',
@@ -117,7 +166,6 @@ def clear_cache():
 
 
 if __name__ == '__main__':
-    # Load model in background thread so server starts immediately
     t = threading.Thread(target=load_model, daemon=True)
     t.start()
 
