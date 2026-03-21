@@ -1333,36 +1333,139 @@ Return ONLY the topic phrase or "auto"."""
 
             # Build content type specific prompt
             if content_type == 'phokat_short':
+                # ── DAILY AWARENESS SCRIPT ENGINE (Full System) ──
+                today_date = datetime.date.today().strftime('%B %d, %Y')
+                today_weekday = datetime.date.today().strftime('%A')
+
+                # Search for today's awareness date/event for accuracy
+                awareness_context = ""
+                if SERPER_API_KEY:
+                    try:
+                        search_q = f"awareness day {datetime.date.today().strftime('%B %d')} India 2025 national international"
+                        search_results = search_web(search_q)
+                        if search_results:
+                            snippets = [r.get('snippet', '') for r in search_results[:3]]
+                            awareness_context = f"\nWEB SEARCH RESULTS for today's awareness days:\n" + "\n".join(f"- {s}" for s in snippets if s)
+                    except:
+                        awareness_context = ""
+
                 if topic == 'auto':
-                    topic_instruction = "Pick a fresh, relevant awareness topic for today\'s India — social issue, environment, health, education, or civic awareness. Make it specific and impactful."
+                    topic_instruction = f"""Today is {today_date} ({today_weekday}).
+{awareness_context}
+Pick the MOST socially relevant awareness day or topic for today's India.
+✔ Real reason the date exists
+✔ Most socially relevant, not most tragic
+❌ No invention — facts only"""
                 else:
-                    topic_instruction = f"Topic: {topic}"
+                    topic_instruction = f"Topic: {topic}\nDate context: {today_date}"
 
-                prompt = f"""You are writing a script for Sudeep\'s YouTube/Instagram channel "Phokat ka Gyan" — daily 60-90 second awareness shorts.
+                pkg_engine_prompt = f"""You are writing a script for "Phokat Ka Gyan" — Sudeep's daily awareness channel.
 
-CHANNEL STYLE:
-- Hindi/Hinglish mix (mostly Hindi, some English terms)
-- Direct, punchy, conversational tone — like talking to a friend
-- Awareness focused — social issues, civic sense, environment, health, education
-- Always ends with a thought-provoking question or call to action
-- Hook in first 3 seconds — must grab attention immediately
-- No fluff, every word counts
+━━━ YOUR ROLE ━━━
+You are NOT a teacher, preacher or newsreader.
+You ARE a sharp observer in a chai-pe-charcha tone — someone who notices what feels "normal" but isn't, someone who explains power, incentives, fear, delay.
+Tone: "Yeh cheez kabhi ajeeb nahi lagi tumhe?"
 
+━━━ CONTENT PURPOSE ━━━
+Create awareness videos that:
+• Interrupt scrolling through curiosity, not commands
+• Expose systems, not emotions
+• Feel like insider truth, not homework
+• Leave viewer slightly uncomfortable — but smarter
+Journey: Confusion → Realisation → "Oh… that's how it works" → Mental upgrade
+
+━━━ TOPIC ━━━
 {topic_instruction}
 {style_context}
 
-Write a complete, ready-to-shoot script with:
-1. 🎣 HOOK (first 5-8 seconds — visual + opening line that stops the scroll)
-2. 📢 MAIN POINT (core message — 3-4 key facts/points, 45-60 seconds)
-3. 💡 INSIGHT (the "aha moment" — why this matters to the viewer)
-4. 🔥 CTA (closing line + question to spark comments, 10-15 seconds)
+━━━ HOOK RULES (CRITICAL) ━━━
+BANNED FOREVER: "Stop scrolling" / "Humanity failed" / direct moral judgement
+Hook MUST: sound conversational, create doubt or contradiction, withhold conclusion, feel incomplete without watching.
+Hook MUST challenge or reverse a commonly held belief about the topic.
+NOT just: "Yeh normal lagta hai" — but: "Jo cheez tum is baare mein sahi samajhte ho — wahi galat hai"
 
-Also provide:
-- Suggested on-screen text overlays (2-3 key phrases)
-- Background music mood suggestion
-- Estimated duration
+APPROVED HOOK PATTERNS (pick one, rotate):
+A — Quiet Contradiction: "Yeh day celebrate hota hai… par reason almost kisi ko yaad nahi."
+B — Incomplete Truth: "Hume lagta hai yeh problem logon ki wajah se hai. Par sach thoda aur uncomfortable hai."
+C — Personal Doubt: "Mujhe pehle lagta tha yeh bilkul normal hai. Phir ek cheez samajh aayi."
+D — System Gap: "Yeh issue isliye survive karta hai kyunki system ko isse fayda milta hai."
+E — Normalised Absurdity: "Yeh cheez hume normal lagti hai. Honi nahi chahiye."
 
-Format as a proper shooting script. Be specific, be impactful."""
+━━━ SCRIPT STRUCTURE (60-75 seconds) ━━━
+
+1️⃣ HOOK (0–3s): One pattern above. End mid-thought.
+
+2️⃣ CONTEXT SNAPSHOT (3–10s): One concrete situation. One group. Zero emotion.
+Example tone: "Office meetings mein… schools mein… public systems mein…"
+
+3️⃣ WHY THIS DATE EXISTS (10–20s): One trigger. One authority. One reason.
+Tone: Neutral. Almost boring. (contrast boosts credibility)
+
+4️⃣ THE MECHANISM (20–35s) — CORE:
+• Explain ONE system only
+• Use cause → effect
+• Talk incentives, fear, delay, reward
+• Hindi for pressure ("darr", "izzat", "adjust kar lo") / English for systems ("policy", "budget", "evaluation")
+• Every abstract system must be paired with one concrete proxy (form/rule/meeting/budget line/silence/delay)
+❌ No "society failed" / No emotional blame
+
+5️⃣ PRESENT-DAY CONSEQUENCE (35–45s): One present-day example. Calm delivery. No outrage.
+Tone: "Same system. Naye words."
+
+6️⃣ PROOF OF POSSIBILITY (45–55s): One real example. One line. No celebration.
+Purpose: Break helplessness, not sell hope.
+
+7️⃣ VIEWER PIVOT (55–65s): Create mild cognitive discomfort — without telling viewer what to do.
+✔ One mental shift OR explicitly say: "Iska individual solution nahi hai."
+Approved: "Agar yeh abhi bhi normal lagta hai…" / "Yahan hum sochna band kar dete hain…"
+Test: if the pivot feels "agreeable" → it's weak.
+
+8️⃣ OPEN-ENDED CLOSE (65–70s): Leave tension unresolved.
+"Isliye yeh day abhi bhi relevant hai." / "Most log yahan sochna band kar dete hain."
+❌ No CTA / No "share/comment"
+
+━━━ EMOTIONAL SPIKE RULE ━━━
+One sharp spike (anger/irony/discomfort/blunt truth) AFTER the Mechanism section.
+• One line only • Not a slogan • Does not accuse the viewer
+Purpose: memorability without moral lecturing.
+
+━━━ LANGUAGE RULES ━━━
+✔ Hinglish ONLY — spoken, raw, uneven, short lines + pauses
+❌ Formal English / Shuddh Hindi / Philosophy / Poetic writing
+Rule: Agar yeh line tum kisi dost ko bol nahi sakte — cut it.
+
+━━━ REQUIRED OUTPUT FORMAT ━━━
+
+**1️⃣ TELEPROMPTER SCRIPT (60-75 sec)**
+[Full script with section markers and timing]
+
+**2️⃣ REEL COVER TEXT OPTIONS (3-5 options, Hinglish)**
+[Short punchy text for reel thumbnail/first frame]
+
+**3️⃣ INSTAGRAM CAPTION**
+[Under 200 chars, no hashtags, conversational]
+
+**4️⃣ YOUTUBE SHORTS CAPTION**
+[Under 100 chars, SEO-aware]
+
+━━━ SELF-AUDIT (run before outputting — if ANY is NO, rewrite) ━━━
+☐ First 3 seconds feel natural, not scripted?
+☐ Language feels desi, not translated?
+☐ Mechanism is crystal clear with a concrete proxy?
+☐ One moment made the viewer pause mentally?
+☐ Viewer feels respected, not lectured?
+☐ This sounds like Phokat Ka Gyan, not a seminar?
+☐ Hook challenges or reverses an assumption?
+☐ Viewer pivot creates mild discomfort, not agreement?
+
+━━━ FINAL QUALITY GATE ━━━
+Publish only if it:
+✔ Triggers discussion, not just agreement
+✔ Changes how the viewer thinks
+✔ Is worth defending in comments
+Depth > frequency. Clarity > emotion. Insight > outrage."""
+
+                prompt = pkg_engine_prompt
 
             elif content_type == 'corporate_kurukshetra':
                 if topic == 'auto':
@@ -1451,8 +1554,9 @@ Format as a solo debate (Sudeep presents BOTH sides, then gives his verdict):
 
 Hindi/Hinglish. Punchy. No fence-sitting in the verdict."""
 
-            # Generate the content
-            generated = ask_groq([{'role': 'user', 'content': prompt}], max_tokens=2000)
+            # Generate the content — PKG scripts need more tokens for full output format
+            max_tok = 3000 if content_type == 'phokat_short' else 2000
+            generated = ask_groq([{'role': 'user', 'content': prompt}], max_tokens=max_tok)
 
             # Save to Firestore for reference
             try:
@@ -1472,14 +1576,17 @@ Hindi/Hinglish. Punchy. No fence-sitting in the verdict."""
             log_agent_action(db, user_id, 'content_agent', content_type, f'topic={topic}')
 
             type_labels = {
-                'phokat_short': '🎬 Phokat ka Gyan Short',
+                'phokat_short': '🎬 Phokat Ka Gyan — Daily Awareness Script',
                 'corporate_kurukshetra': '💼 Corporate Kurukshetra',
                 'youtube': '📹 YouTube Long-form',
                 'instagram': '📸 Instagram',
                 'debate': '⚔️ Sunday Debate',
             }
             label = type_labels.get(content_type, '📝 Content')
-            reply = f"{label} Script\n\n{generated}\n\n---\nSaved to your content library. Tell me if you want to change the hook, adjust the tone, or try a different angle."
+            footer = {
+                'phokat_short': "Saved to content library.\nTell me: hook change? different angle? tone too calm? want a second take?",
+            }.get(content_type, "Saved to your content library. Tell me if you want to change the hook, adjust the tone, or try a different angle.")
+            reply = f"{label}\n\n{generated}\n\n---\n{footer}"
             return reply, 'content_agent', {'content_type': content_type, 'topic': topic}
 
         except Exception as e:
