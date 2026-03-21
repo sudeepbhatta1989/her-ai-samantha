@@ -1,6 +1,6 @@
 """
 Samantha Voice — HuggingFace Space
-Coqui XTTS v2 voice cloning using samantha_reference.wav
+Coqui XTTS v2 voice cloning using samantha_reference.wav (32s, 10 best clips)
 CPU inference — no external TTS API needed.
 
 Endpoints:
@@ -9,7 +9,7 @@ Endpoints:
   GET  /      → Gradio UI
 """
 
-import os, io, hashlib, time, base64
+import os, io, hashlib, time
 from pathlib import Path
 
 # Accept Coqui XTTS v2 non-commercial license (CPML) automatically
@@ -34,18 +34,25 @@ def _cache_path(text: str, lang: str) -> Path:
 
 def generate_speech(text: str, language: str = 'en') -> bytes:
     """Generate speech, return raw WAV bytes."""
-    text = text.strip()[:500]
+    # Trim to 200 chars for speed — shorter = faster CPU inference
+    text = text.strip()[:200]
     if not text:
         return None
+
     cache = _cache_path(text, language)
     if cache.exists():
+        print(f'[Samantha] Cache hit for: {text[:40]}')
         return cache.read_bytes()
+
+    start = time.time()
     tts.tts_to_file(
         text=text,
         speaker_wav=str(REFERENCE),
         language=language,
         file_path=str(cache),
     )
+    elapsed = round(time.time() - start, 1)
+    print(f'[Samantha] Generated in {elapsed}s: {text[:60]}')
     return cache.read_bytes()
 
 
@@ -63,17 +70,12 @@ async def tts_endpoint(request: Request):
     if not text:
         return JSONResponse({'error': 'text required'}, status_code=400)
     try:
-        start = time.time()
         audio = generate_speech(text, lang)
-        elapsed = round(time.time() - start, 1)
         if audio:
-            return Response(
-                content=audio,
-                media_type='audio/wav',
-                headers={'X-Generation-Time': str(elapsed)},
-            )
+            return Response(content=audio, media_type='audio/wav')
         return JSONResponse({'error': 'generation failed'}, status_code=500)
     except Exception as e:
+        print(f'[Samantha] Error: {e}')
         return JSONResponse({'error': str(e)}, status_code=500)
 
 @api.get('/health')
@@ -87,12 +89,8 @@ import gradio as gr
 def synthesize(text, language):
     if not text.strip():
         return None
-    start = time.time()
     audio = generate_speech(text, language)
-    elapsed = round(time.time() - start, 1)
-    print(f'[Samantha TTS] {elapsed}s: {text[:60]}')
     if audio:
-        # Gradio type='filepath' — write to a temp file and return path
         out = CACHE_DIR / f'gradio_{hashlib.md5(text.encode()).hexdigest()}.wav'
         out.write_bytes(audio)
         return str(out)
@@ -106,7 +104,7 @@ demo = gr.Interface(
     ],
     outputs=gr.Audio(label='Samantha Voice', type='filepath'),
     title='Samantha Voice — XTTS v2',
-    description='Custom voice cloning. No external TTS API.',
+    description='Custom voice cloning from 128 training clips. Non-commercial use.',
     allow_flagging='never',
 )
 

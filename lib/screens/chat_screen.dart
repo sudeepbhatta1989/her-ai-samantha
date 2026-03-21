@@ -327,7 +327,8 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         _isLoading = false;
       });
       _scrollToBottom();
-      await _speak(reply);
+      // Fire TTS async — don't block UI waiting for voice (HF Space can take 5-25s)
+      _speak(reply);
 
       // If plan was rescheduled, show a banner prompting user to check Plan tab
       if (planUpdated && mounted) {
