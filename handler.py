@@ -1398,78 +1398,111 @@ C — Personal Doubt: "Mujhe pehle lagta tha yeh bilkul normal hai. Phir ek chee
 D — System Gap: "Yeh issue isliye survive karta hai kyunki system ko isse fayda milta hai."
 E — Normalised Absurdity: "Yeh cheez hume normal lagti hai. Honi nahi chahiye."
 
-━━━ SCRIPT STRUCTURE (60-75 seconds) ━━━
+━━━ SCRIPT STRUCTURE (60-75 seconds) — 10 SECTIONS ━━━
 
-1️⃣ HOOK (0–3s): One pattern above. End mid-thought.
+1️⃣ HOOK (0–3s): One approved pattern above. End mid-thought. Never start with "Aaj".
 
-2️⃣ CONTEXT SNAPSHOT (3–10s): One concrete situation. One group. Zero emotion.
-Example tone: "Office meetings mein… schools mein… public systems mein…"
+2️⃣ CONTEXT SNAPSHOT (3–10s): One concrete relatable setting (office/school/government/family).
+Zero emotion. Short lines with ellipsis for pauses.
+Example: "Office mein... school mein... tumne notice kiya hoga—"
 
-3️⃣ WHY THIS DATE EXISTS (10–20s): One trigger. One authority. One reason.
-Tone: Neutral. Almost boring. (contrast boosts credibility)
+3️⃣ WHY THIS DATE EXISTS (10–20s): One historical trigger. One authority/body. One reason.
+Tone: Neutral. Almost boring. Contrast boosts credibility.
 
-4️⃣ THE MECHANISM (20–35s) — CORE:
-• Explain ONE system only
-• Use cause → effect
-• Talk incentives, fear, delay, reward
-• Hindi for pressure ("darr", "izzat", "adjust kar lo") / English for systems ("policy", "budget", "evaluation")
-• Every abstract system must be paired with one concrete proxy (form/rule/meeting/budget line/silence/delay)
+4️⃣ BELIEF CHALLENGE (within 20s): The assumption most people have — flipped.
+"Par problem yahi nahi hai..." / "Par sach thoda aur uncomfortable hai."
+This is NOT the mechanism. It's the gap between what people think and reality.
+
+5️⃣ MECHANISM (20–35s) — THE CORE:
+• Explain ONE system only. Cause → effect.
+• Talk incentives, fear, delay, reward.
+• Hindi for pressure ("darr", "izzat", "adjust kar lo") + English for systems ("policy", "budget", "form")
+• Every abstract system needs one concrete proxy (form/meeting/silence/delay/budget line)
 ❌ No "society failed" / No emotional blame
 
-5️⃣ PRESENT-DAY CONSEQUENCE (35–45s): One present-day example. Calm delivery. No outrage.
-Tone: "Same system. Naye words."
+6️⃣ EMOTIONAL SPIKE (one line): ONE sharp line after Mechanism.
+Anger/irony/blunt truth. Not a slogan. Does not accuse viewer. Purpose: memorability.
 
-6️⃣ PROOF OF POSSIBILITY (45–55s): One real example. One line. No celebration.
-Purpose: Break helplessness, not sell hope.
+7️⃣ PRESENT-DAY CONSEQUENCE (35–45s): One calm present-day example. No outrage.
+End with: "Same system." or "Bas medium change ho gaya."
 
-7️⃣ VIEWER PIVOT (55–65s): Create mild cognitive discomfort — without telling viewer what to do.
-✔ One mental shift OR explicitly say: "Iska individual solution nahi hai."
-Approved: "Agar yeh abhi bhi normal lagta hai…" / "Yahan hum sochna band kar dete hain…"
-Test: if the pivot feels "agreeable" → it's weak.
+8️⃣ PROOF OF POSSIBILITY (45–55s): One real country/example where it works differently. One line.
+Purpose: Break helplessness, not sell hope. No celebration.
 
-8️⃣ OPEN-ENDED CLOSE (65–70s): Leave tension unresolved.
-"Isliye yeh day abhi bhi relevant hai." / "Most log yahan sochna band kar dete hain."
-❌ No CTA / No "share/comment"
+9️⃣ VIEWER PIVOT (55–65s): Mild cognitive discomfort. Never tell viewer what to do.
+"Agar complex cheez sunke tum automatically impress ho jaate ho..." / "Toh shayad wahi jagah hai..."
+Test: if it feels agreeable → rewrite. It should sting slightly.
 
-━━━ EMOTIONAL SPIKE RULE ━━━
-One sharp spike (anger/irony/discomfort/blunt truth) AFTER the Mechanism section.
-• One line only • Not a slogan • Does not accuse the viewer
-Purpose: memorability without moral lecturing.
+🔟 OPEN-ENDED CLOSE (65–70s): Leave tension unresolved.
+"Most log yahin sochna band kar dete hain." ❌ No CTA / No share/comment.
 
 ━━━ LANGUAGE RULES ━━━
 ✔ Hinglish ONLY — spoken, raw, uneven, short lines + pauses
 ❌ Formal English / Shuddh Hindi / Philosophy / Poetic writing
 Rule: Agar yeh line tum kisi dost ko bol nahi sakte — cut it.
 
-━━━ REQUIRED OUTPUT FORMAT ━━━
+━━━ SCRIPT STRUCTURE — EXACT 10 SECTIONS ━━━
+Output EXACTLY in this order. No reordering. No skipping.
 
-**1️⃣ TELEPROMPTER SCRIPT (60-75 sec)**
-[Full script with section markers and timing]
+DAILY AWARENESS SCRIPT — {today_date}
+Topic Chosen: [topic name] ([one-line reframe of how you're approaching it])
 
-**2️⃣ REEL COVER TEXT OPTIONS (3-5 options, Hinglish)**
-[Short punchy text for reel thumbnail/first frame]
+TELEPROMPTER SCRIPT (60-75 sec)
 
-**3️⃣ INSTAGRAM CAPTION**
-[Under 200 chars, no hashtags, conversational]
+HOOK (0-3s)
+[2-3 short lines. Assumption flip or quiet contradiction. End mid-thought. Never start with "Aaj".]
 
-**4️⃣ YOUTUBE SHORTS CAPTION**
-[Under 100 chars, SEO-aware]
+CONTEXT SNAPSHOT (3-10s)
+[3-4 short lines. One concrete relatable setting — office/school/system. Zero emotion. Ellipsis for pauses.]
+
+WHY THIS DATE EXISTS (10-20s)
+[2-3 lines. Historical trigger. One authority/body. One clear reason. Neutral, almost boring tone.]
+
+BELIEF CHALLENGE (within 20s)
+[2-3 lines. The assumption most people hold — and why it's incomplete or wrong. "Par problem yahi nahi hai..."]
+
+MECHANISM (20-35s)
+[5-7 lines. Explain ONE system. Cause → effect. Use incentives/fear/delay/reward. Short sentences. Use English for systems (policy, budget, form) + Hindi for pressure (darr, izzat, adjust).]
+
+EMOTIONAL SPIKE (one line)
+[Single punchy line. Anger/irony/blunt truth. Not a slogan. Does not accuse viewer. No period — ends with.]
+
+PRESENT-DAY CONSEQUENCE (35-45s)
+[3-4 lines. One present-day example. Calm delivery. End with: "Same system." or equivalent.]
+
+PROOF OF POSSIBILITY (45-55s)
+[2-3 lines. One country/system where it works differently. One line. No celebration. Purpose: breaks helplessness.]
+
+VIEWER PIVOT (55-65s)
+[2-3 lines. Mild cognitive discomfort. "Agar tumhe lagta hai..." or "Toh shayad wahi jagah hai...". Never tell viewer what to do.]
+
+OPEN-ENDED CLOSE (65-70s)
+[2-3 lines. Leave tension unresolved. "Most log yahin sochna band kar dete hain." No CTA. No share/comment.]
+
+━━━ REEL COVER TEXT OPTIONS (HINGLISH) ━━━
+• "[Option 1]"
+• "[Option 2]"
+• "[Option 3]"
+• "[Option 4]"
+• "[Option 5]"
+[4-5 options. Each is a short punchy Hinglish phrase. Curiosity triggers: "X kya Hai?", "X vs Reality", "Hidden Y", "X ka Asli Y", "System ka X".]
+
+━━━ INSTAGRAM CAPTION ━━━
+[2-3 impactful Hinglish lines. No emojis. Then hashtags on next line.]
+#[TopicHashtag] #HiddenSystems #[RelevantTag] #[RelevantTag] #PhokatKaGyan
+
+━━━ YOUTUBE SHORTS CAPTION (<100 chars) ━━━
+[Single punchy one-liner capturing the core insight. Under 100 characters.]
 
 ━━━ SELF-AUDIT (run before outputting — if ANY is NO, rewrite) ━━━
-☐ First 3 seconds feel natural, not scripted?
-☐ Language feels desi, not translated?
-☐ Mechanism is crystal clear with a concrete proxy?
-☐ One moment made the viewer pause mentally?
-☐ Viewer feels respected, not lectured?
-☐ This sounds like Phokat Ka Gyan, not a seminar?
-☐ Hook challenges or reverses an assumption?
-☐ Viewer pivot creates mild discomfort, not agreement?
-
-━━━ FINAL QUALITY GATE ━━━
-Publish only if it:
-✔ Triggers discussion, not just agreement
-✔ Changes how the viewer thinks
-✔ Is worth defending in comments
+☐ Hook sounds like something you'd say to a friend, not read from a script?
+☐ Language is Hinglish throughout — not translated English, not Shuddh Hindi?
+☐ Mechanism has ONE concrete proxy (form/meeting/policy/silence/delay)?
+☐ Emotional Spike is exactly one line and hits without accusing the viewer?
+☐ Belief Challenge actually flips an assumption — not just states the topic?
+☐ Viewer pivot creates mild discomfort, not agreement or inspiration?
+☐ Instagram caption has relevant hashtags including #PhokatKaGyan?
+☐ YouTube caption is under 100 characters?
 Depth > frequency. Clarity > emotion. Insight > outrage."""
 
                 prompt = pkg_engine_prompt
