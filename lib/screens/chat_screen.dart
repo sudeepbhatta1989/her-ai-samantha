@@ -8,6 +8,7 @@ import 'dart:math' as math;
 import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/services.dart';
 
 const String LAMBDA_URL =
     'https://aybg83gr69.execute-api.ap-south-1.amazonaws.com/prod/chat';
@@ -31,6 +32,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
 
   // Each Talk session gets unique ID for history grouping
   final String _sessionId = DateTime.now().millisecondsSinceEpoch.toString();
+
+  // Feedback state: msgId → 1 (thumbs up) or -1 (thumbs down)
+  final Map<String, int> _feedback = {};
 
   bool _isListening = false;
   bool _isLoading = false;
@@ -284,6 +288,34 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     setState(() { _isListening = false; _micLevel = 0.0; });
   }
 
+  void _copyMessage(String text) {
+    Clipboard.setData(ClipboardData(text: text));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Copied to clipboard'),
+        duration: Duration(seconds: 1),
+        backgroundColor: Color(0xFF1A1A24),
+      ),
+    );
+  }
+
+  Future<void> _sendFeedback(String msgId, int rating) async {
+    setState(() => _feedback[msgId] = rating);
+    try {
+      await http.post(
+        Uri.parse(LAMBDA_URL),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'userId': USER_ID,
+          'action': 'save_feedback',
+          'msg_id': msgId,
+          'rating': rating,
+          'session_id': _sessionId,
+        }),
+      ).timeout(const Duration(seconds: 10));
+    } catch (_) {}
+  }
+
   Future<void> _sendMessage(String text) async {
     if (text.trim().isEmpty) return;
     await _stopListening();
@@ -332,7 +364,12 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       _thinkController.stop();
       _thinkController.reset();
       setState(() {
-        _messages.add({'role': 'samantha', 'text': reply, 'agent': agentUsed});
+        _messages.add({
+          'role': 'samantha',
+          'text': reply,
+          'agent': agentUsed,
+          'id': '${DateTime.now().millisecondsSinceEpoch}_${math.Random().nextInt(9999)}',
+        });
         _isLoading = false;
       });
       _scrollToBottom();
@@ -859,7 +896,10 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           child: Container(height: 1, color: const Color(0xFF2A2A3A)),
         ),
       ),
-      body: Column(
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        behavior: HitTestBehavior.translucent,
+        child: Column(
         children: [
           Expanded(
             child: ListView.builder(
@@ -1021,6 +1061,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
             ),
           ),
         ],
+        ),
       ),
     );
   }
@@ -1115,6 +1156,74 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
               child: Text(msg['text'] ?? '',
                   style: const TextStyle(fontSize: 14, height: 1.55)),
             ),
+            if (isSamantha) ...[
+              const SizedBox(height: 4),
+              Padding(
+                padding: const EdgeInsets.only(left: 4),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Copy
+                    InkWell(
+                      onTap: () => _copyMessage(msg['text'] ?? ''),
+                      borderRadius: BorderRadius.circular(6),
+                      child: Padding(
+                        padding: const EdgeInsets.all(4),
+                        child: Row(
+                          children: const [
+                            Icon(Icons.copy_rounded, size: 12, color: Color(0xFF4A4A6A)),
+                            SizedBox(width: 3),
+                            Text('Copy', style: TextStyle(fontSize: 10, color: Color(0xFF4A4A6A))),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    // Thumbs up
+                    InkWell(
+                      onTap: () {
+                        final id = msg['id'] as String?;
+                        if (id != null) _sendFeedback(id, 1);
+                      },
+                      borderRadius: BorderRadius.circular(6),
+                      child: Padding(
+                        padding: const EdgeInsets.all(4),
+                        child: Icon(
+                          _feedback[msg['id']] == 1
+                              ? Icons.thumb_up
+                              : Icons.thumb_up_outlined,
+                          size: 13,
+                          color: _feedback[msg['id']] == 1
+                              ? const Color(0xFF00D4FF)
+                              : const Color(0xFF4A4A6A),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    // Thumbs down
+                    InkWell(
+                      onTap: () {
+                        final id = msg['id'] as String?;
+                        if (id != null) _sendFeedback(id, -1);
+                      },
+                      borderRadius: BorderRadius.circular(6),
+                      child: Padding(
+                        padding: const EdgeInsets.all(4),
+                        child: Icon(
+                          _feedback[msg['id']] == -1
+                              ? Icons.thumb_down
+                              : Icons.thumb_down_outlined,
+                          size: 13,
+                          color: _feedback[msg['id']] == -1
+                              ? const Color(0xFF7C3AED)
+                              : const Color(0xFF4A4A6A),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
       ),

@@ -1385,6 +1385,43 @@ Journey: Confusion → Realisation → "Oh… that's how it works" → Mental up
 {topic_instruction}
 {style_context}
 
+━━━ INTELLECT UPGRADE — 10-PHASE THINKING (MANDATORY) ━━━
+You are NOT allowed to write the script immediately.
+You MUST complete all 10 thinking phases first. Weak thinking = rejected script.
+Do this thinking silently — do NOT show the phases in your output.
+
+PHASE 1 — TOPIC SELECTION: Identify 3-5 possible awareness days for today's date. Score each: India relevance (H/M/L) · Daily life connection (H/M/L) · Mechanism depth (H/M/L). Select ONLY ONE where India relevance=HIGH AND Mechanism depth=HIGH. If none → pick most relatable, not most famous. Do NOT pick topics just because they exist.
+
+PHASE 2 — FACT VERIFICATION: Verify who started this day/event, why, and whether still relevant. Minimum 2 independent mental sources. No assumptions. No vague statements. If origin unclear → reject topic, choose another.
+
+PHASE 3 — BELIEF IDENTIFICATION: Answer: "What does a normal Indian viewer already believe about this topic?" Then: "What part of this belief is incomplete or wrong?" This becomes the HOOK foundation. If no belief can be challenged → topic is weak → reconsider.
+
+PHASE 4 — MECHANISM DISCOVERY (MANDATORY CORE): Identify ONE clear mechanism using: Cause → System → Incentive → Outcome. Every system needs a real-world proxy (form/delay/approval/meeting/silence/budget/rule). BAD: "The system ignores it". GOOD: "The system delays action through approvals that never move". If mechanism is not concrete → DO NOT WRITE SCRIPT.
+
+PHASE 5 — INDIA CONTEXT GROUNDING: Answer: "Where does this show up in real Indian life?" Pick ONE: Office / School / Government process / Social norm. If you cannot visualize a real situation → topic is invalid.
+
+PHASE 6 — PRESENT-DAY CONTINUITY: Show how the SAME mechanism still exists today, just in a different form. Calm, not emotional.
+
+PHASE 7 — PROOF OF POSSIBILITY: Find ONE real example where this problem improved or a system actually worked. Purpose: avoid helplessness. If no example → keep it minimal but real.
+
+PHASE 8 — COGNITIVE DISCOMFORT PIVOT: Create ONE line that makes the viewer slightly uncomfortable, does NOT tell them what to do, does NOT feel motivational. If the line feels agreeable → rewrite.
+
+PHASE 9 — EMOTIONAL SPIKE CONTROL: ONE sharp line allowed. Must come AFTER mechanism. Not dramatic or preachy. Must feel like blunt truth.
+
+PHASE 10 — SCRIPT GENERATION: Only after completing ALL phases above, generate the 4-format output below.
+
+━━━ ANTI-BULLSHIT FILTER (run before output) ━━━
+Before finalizing, check:
+1. Is this insight obvious to an average person? → If YES, discard and rethink.
+2. Am I blaming "society" or "people" vaguely? → If YES, replace with system/incentive.
+3. Does this feel like a news explanation? → If YES, add mechanism depth.
+4. Would a smart viewer say "Okay, but what's new here?" → If YES, rewrite.
+
+━━━ CORE RULE ━━━
+You are not a content writer. You are a pattern recognizer exposing hidden systems in everyday life.
+Do NOT aim to explain the topic. Aim to expose what is NOT immediately visible about the topic.
+If the output feels like information → it has failed. If it changes how the viewer sees something normal → it succeeds.
+
 ━━━ HOOK RULES (CRITICAL) ━━━
 BANNED FOREVER: "Stop scrolling" / "Humanity failed" / direct moral judgement
 Hook MUST: sound conversational, create doubt or contradiction, withhold conclusion, feel incomplete without watching.
@@ -3071,6 +3108,23 @@ def lambda_handler(event, context):
                 return _response({'approvals': approvals, 'status': 'ok'})
             except Exception as e:
                 return _response({'error': str(e), 'status': 'error'}, 500)
+
+        # ── Save Feedback (thumbs up/down) ──
+        if action == 'save_feedback':
+            msg_id  = body.get('msg_id', '')
+            rating  = body.get('rating', 0)   # 1 = thumbs up, -1 = thumbs down
+            sess_id = body.get('session_id', '')
+            if msg_id and rating in (1, -1):
+                try:
+                    import datetime as _dt_fb
+                    db.document(f'users/{user_id}/feedback/{msg_id}').set({
+                        'rating': rating,
+                        'session_id': sess_id,
+                        'created_at': _dt_fb.datetime.utcnow().isoformat(),
+                    })
+                except Exception as _e_fb:
+                    pass
+            return _response({'ok': True})
 
         # ── Samantha TTS: edge-tts (Indian English + Hindi, no API key) ──
         if action == 'tts':
