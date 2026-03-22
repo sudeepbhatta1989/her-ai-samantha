@@ -2,6 +2,17 @@ import json, os, requests, datetime, concurrent.futures, threading
 from firebase_admin import credentials, firestore, initialize_app
 import firebase_admin
 
+# ── Bhagavad Gita Database (700 shlokas — no API needed) ──
+try:
+    from gita_db import GITA_DB
+except ImportError:
+    GITA_DB = {}
+
+def get_shloka(chapter: int, verse: int) -> dict:
+    """Return {'sanskrit': str, 'title': str} for given chapter/verse."""
+    entry = GITA_DB.get(f'{chapter}.{verse}', {})
+    return {'sanskrit': entry.get('s', ''), 'title': entry.get('t', '')}
+
 GROQ_API_KEY = os.environ.get('GROQ_API_KEY', '')
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 SERPER_API_KEY = os.environ.get('SERPER_API_KEY', '')  # Free: 2500 searches, no card needed
@@ -1555,19 +1566,33 @@ Depth > frequency. Clarity > emotion. Insight > outrage."""
                 )
                 if shloka_match:
                     g = shloka_match.groups()
-                    ch = g[0] or g[3]
-                    sl = g[1] or g[2]
-                    shloka_ref = f"Bhagavad Gita Chapter {ch}, Shloka {sl}"
+                    ch_num = int(g[0] or g[3])
+                    sl_num = int(g[1] or g[2])
+                    shloka_ref = f"Chapter {ch_num} | Shloka {sl_num}"
+                    # ── Pull exact Sanskrit from Gita DB (no API needed) ──
+                    db_entry = get_shloka(ch_num, sl_num)
+                    sanskrit_text = db_entry.get('sanskrit', '')
+                    shloka_title = db_entry.get('title', '')
+                    if sanskrit_text:
+                        shloka_block = f"""SHLOKA DATABASE ENTRY — USE THIS EXACT TEXT:
+Chapter: {ch_num} | Verse: {sl_num}
+Chapter Title: {shloka_title}
+Sanskrit:
+{sanskrit_text}
+
+⚠️ Use this EXACT Sanskrit text in section 3. Do NOT paraphrase or change it."""
+                    else:
+                        shloka_block = f"Shloka: {shloka_ref} — use accurate Sanskrit from your knowledge."
                     topic_instruction = f"""ACTIVATION: {shloka_ref}
-Look up the actual Sanskrit shloka for {shloka_ref}.
+{shloka_block}
 Build the entire script around the battlefield wisdom of this specific shloka.
-The shloka MUST appear in the script as the emotional highlight — full Sanskrit, no translation inside the shloka block."""
+The shloka MUST appear in the script at section 3 — full Sanskrit, no translation inside that block."""
                 elif topic == 'auto':
-                    topic_instruction = """Pick a Bhagavad Gita shloka whose battlefield wisdom maps directly to a sharp corporate misjudgment.
+                    topic_instruction = """Pick ONE Bhagavad Gita shloka whose battlefield wisdom maps directly to a sharp corporate misjudgment.
 Choose one that reveals: ego, delusion, weak leadership, blind loyalty, collapse under pressure, or wrong judgement.
-State the Chapter and Shloka number clearly."""
+State the exact Chapter and Shloka number in the episode header."""
                 else:
-                    topic_instruction = f"Topic/Shloka: {topic}\nMap this to a specific corporate battlefield truth."
+                    topic_instruction = f"Topic/Shloka: {topic}\nMap this to a specific corporate battlefield truth. State chapter and shloka number."
 
                 prompt = f"""You are the exclusive scriptwriter for "Corporate Kurukshetra" — a YouTube Shorts and Reels series on Sudeep's Phokat Ka Gyan channel.
 
@@ -1576,14 +1601,73 @@ Warrior monk decoding battlefield psychology for corporate survival.
 NOT a teacher. NOT a preacher. NOT a motivational coach.
 Mahabharata battlefield strategy meets modern corporate warfare.
 Every line = a weapon strike. Zero softness.
+FINAL RULE: You are not explaining the Gita. You are weaponizing it for corporate survival.
+If the viewer feels inspired → you failed. If the viewer feels EXPOSED → you succeeded.
 
 ━━━ WHAT TO GENERATE ━━━
 {topic_instruction}
 {style_context}
 
+━━━ MANDATORY PRE-GENERATION THINKING PHASE (COMPLETE ALL — DO NOT SKIP) ━━━
+
+GITA WAR INTERPRETER MODE — run BEFORE writing any script:
+
+PHASE 1 — SHLOKA CONTEXT:
+Identify: Who is speaking (Krishna/Arjuna) | What situation | What psychological war is being fought.
+Define in ONE line: "What battle is actually happening here?" (NOT physical — psychological)
+Flaw: ego / overconfidence / blind loyalty / fear / attachment / confusion / wrong judgement / inaction
+→ If flaw is unclear → DO NOT PROCEED
+
+PHASE 2 — LENS DIAGNOSIS (test through ALL 15 lenses — pick the sharpest ONE):
+1.Power & Politics | 2.Incentive & Metrics | 3.Hierarchy & Bureaucracy | 4.Culture & Values
+5.Communication | 6.Workload & Burnout | 7.Identity & Self-Worth | 8.Skill & Competence
+9.Ethics & Integrity | 10.Time & Attention | 11.Innovation & Risk | 12.Leadership
+13.Economic Reality | 14.Meaning & Existential | 15.Systemic Hypocrisy
+→ Select ONE primary lens (sharpest + most uncomfortable corporate truth)
+→ Optional: ONE secondary lens if it strengthens
+
+PHASE 3 — CORPORATE BATTLEFIELD MAPPING:
+Map flaw + lens → ONE real corporate situation:
+office politics / leadership decision / team conflict / performance pressure / promotion / deadline chaos
+Test: Viewer must say "Haan yeh toh mere office mein hota hai"
+
+PHASE 4 — MISCONCEPTION ATTACK:
+Break ONE common corporate belief. Structure: "[Wrong belief]" ❌ → "[Actual truth]" ✔
+This becomes the HOOK foundation.
+→ If no belief challenged → hook will be weak
+
+PHASE 5 — STRATEGIC INSIGHT:
+Convert shloka into: Mistake → Why it fails → What actually works
+NOT: "This teaches us..." INSTEAD: tactical mistake + correction
+
+PHASE 6 — SHLOKA DEPTH CHECK (4-question filter — if any YES → rewrite):
+1. Is this interpretation obvious to an average person? → If YES: discard
+2. Would a corporate employee say "Yeh toh LinkedIn pe suna hai"? → If YES: rewrite
+3. Is this exposing something uncomfortable? → If NO: go deeper
+4. Am I translating the shloka or interpreting it? → If translating: STOP
+
+PHASE 7 — PUNCHLINE GENERATION:
+Create ONE dagger line: max 6-8 words, brutal clarity, no fluff.
+Test: Can this be printed on a t-shirt? If NO → rewrite.
+
+PHASE 8 — WAR LANGUAGE VALIDATION:
+Does this feel like a battlefield briefing OR a LinkedIn post?
+→ If LinkedIn → REWRITE until it feels like war.
+
+━━━ ANTI-BULLSHIT FILTER (run after draft — if ANY is YES → rewrite that section) ━━━
+• Sounds like a Gita explanation → REWRITE
+• Feels motivational or soft → REWRITE
+• Insight is obvious → REWRITE
+• Lacks corporate specificity → REWRITE
+• Lens is not clearly visible in the script → REWRITE
+• Punchline is longer than 8 words → REWRITE
+
+━━━ ADDITIONAL RULE ━━━
+Do NOT aim to explain the shloka. Aim to EXPOSE what is NOT immediately visible about it.
+
 ━━━ TONE RULES (NON-NEGOTIABLE) ━━━
 ✔ Hinglish only — short, punchy, cinematic
-✔ Battlefield energy throughout
+✔ Battlefield energy throughout — NEVER softens
 ✔ Corporate truths = weapon strikes
 BANNED: "One should understand" / "This teaches us" / "Sometimes in life" / "We all face" / Boss/Bro/Yaar/Bhai / humor / meme language / motivational poster lines / poetic drift
 
@@ -3215,6 +3299,38 @@ def lambda_handler(event, context):
                         'timestamp': _dt_cg.datetime.utcnow().isoformat(),
                     })
                 return _response({'imported_count': imported, 'status': 'ok'})
+            except Exception as e:
+                return _response({'error': str(e), 'status': 'error'}, 500)
+
+        # ── Response Feedback (thumbs up/down → Samantha learning loop) ──
+        if action == 'feedback':
+            try:
+                import datetime as _dt_fb
+                rating = body.get('rating', '')          # 'up' or 'down'
+                message_text = body.get('message', '')[:500]
+                response_text = body.get('response', '')[:1000]
+                context = body.get('context', '')        # optional: content type
+                if rating not in ('up', 'down'):
+                    return _response({'error': "rating must be 'up' or 'down'"}, 400)
+                fb_doc = {
+                    'rating': rating,
+                    'message': message_text,
+                    'response': response_text,
+                    'context': context,
+                    'timestamp': _dt_fb.datetime.utcnow().isoformat(),
+                    'date': _dt_fb.date.today().isoformat(),
+                }
+                if db:
+                    db.collection(f'users/{user_id}/feedback').add(fb_doc)
+                    # If thumbs down — save as a learning note in memories
+                    if rating == 'down':
+                        db.collection(f'users/{user_id}/memories').add({
+                            'content': f'User gave thumbs DOWN to this response. Avoid similar pattern.\nMessage: {message_text[:200]}\nResponse: {response_text[:300]}',
+                            'type': 'feedback_negative',
+                            'importance': 8,
+                            'timestamp': _dt_fb.datetime.utcnow().isoformat(),
+                        })
+                return _response({'status': 'ok', 'rating': rating})
             except Exception as e:
                 return _response({'error': str(e), 'status': 'error'}, 500)
 

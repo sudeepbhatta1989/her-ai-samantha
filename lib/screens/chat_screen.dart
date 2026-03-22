@@ -301,18 +301,31 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
 
   Future<void> _sendFeedback(String msgId, int rating) async {
     setState(() => _feedback[msgId] = rating);
+    // Find the message and its preceding user message for context
+    final msgIdx = _messages.indexWhere((m) => m['id'] == msgId);
+    final responseText = msgIdx >= 0 ? (_messages[msgIdx]['text'] ?? '') as String : '';
+    final userText = msgIdx > 0 ? (_messages[msgIdx - 1]['text'] ?? '') as String : '';
     try {
       await http.post(
         Uri.parse(LAMBDA_URL),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'userId': USER_ID,
-          'action': 'save_feedback',
-          'msg_id': msgId,
-          'rating': rating,
-          'session_id': _sessionId,
+          'action': 'feedback',
+          'rating': rating == 1 ? 'up' : 'down',
+          'message': userText,
+          'response': responseText,
+          'context': _messages[msgIdx]['agent'] ?? '',
         }),
       ).timeout(const Duration(seconds: 10));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(rating == 1 ? '👍 Feedback saved' : '👎 Noted — Samantha will improve'),
+          duration: const Duration(seconds: 2),
+          backgroundColor: rating == 1 ? const Color(0xFF00D4FF) : const Color(0xFF7C3AED),
+          behavior: SnackBarBehavior.floating,
+        ));
+      }
     } catch (_) {}
   }
 
